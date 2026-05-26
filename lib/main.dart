@@ -401,6 +401,15 @@ class DashboardScreen extends StatelessWidget {
                             powerCtrl.text.isEmpty ||
                             costCtrl.text.isEmpty ||
                             lifeCtrl.text.isEmpty) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Comprueba que el nombre, consumo, costo y vida útil estén llenos.',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
                           return;
                         }
                         try {
@@ -551,6 +560,15 @@ class DashboardScreen extends StatelessWidget {
                             colorCtrl.text.isEmpty ||
                             costCtrl.text.isEmpty ||
                             qtyCtrl.text.isEmpty) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Por favor llena todos los campos del material (nombre, color, costo, cantidad).',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
                           return;
                         }
                         try {
@@ -1467,6 +1485,15 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                                 timeCtrl.text.isEmpty ||
                                 selectedPrinter == null ||
                                 selectedMaterial == null) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Por favor, completa el nombre, material, cantidad y tiempo.',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
                               return;
                             }
                             try {
