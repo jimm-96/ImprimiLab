@@ -1,4 +1,4 @@
-# ImprimiLab 🖨️
+# ImprimiLab
 
 ImprimiLab es una aplicación móvil desarrollada en Flutter orientada a la **gestión de impresiones 3D**. Su propósito es facilitar la organización, seguimiento y administración de trabajos de impresión, clientes y recursos en un entorno de manufactura aditiva.
 
