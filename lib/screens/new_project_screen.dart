@@ -27,6 +27,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
   final _clientNameController = TextEditingController();
   final _clientContactController = TextEditingController();
   final _collectionNameController = TextEditingController();
+  final _notesController = TextEditingController();
 
   // Mano de obra
   final _prepTimeController = TextEditingController(text: '0');
@@ -73,6 +74,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
             prefs.getString('draft_client_contact') ?? '';
         _collectionNameController.text =
             prefs.getString('draft_collection_name') ?? '';
+        _notesController.text = prefs.getString('draft_notes') ?? '';
         _prepTimeController.text = prefs.getString('draft_prep_time') ?? '0';
         _prepCostController.text = prefs.getString('draft_prep_cost') ?? '0';
         _postTimeController.text = prefs.getString('draft_post_time') ?? '0';
@@ -141,6 +143,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
         'draft_collection_name',
         _collectionNameController.text,
       );
+      await prefs.setString('draft_notes', _notesController.text);
       await prefs.setString('draft_prep_time', _prepTimeController.text);
       await prefs.setString('draft_prep_cost', _prepCostController.text);
       await prefs.setString('draft_post_time', _postTimeController.text);
@@ -224,6 +227,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
       clientName: _clientNameController.text,
       clientContact: _clientContactController.text,
       collectionName: _collectionNameController.text,
+      notes: _notesController.text,
     );
 
     appState.addProject(project);
@@ -879,6 +883,16 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                   setState(() => _margin = val);
                   _saveDraft();
                 },
+              ),
+              const SizedBox(height: 15),
+              TextFormField(
+                controller: _notesController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Notas y observaciones especiales',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (_) => _saveDraft(),
               ),
               const SizedBox(height: 15),
 
