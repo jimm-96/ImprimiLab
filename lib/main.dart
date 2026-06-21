@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/onboarding_screen.dart';
+import 'state/app_state.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await appState.init();
   runApp(const ImpriLabApp());
 }
 
@@ -25,7 +29,9 @@ class ImpriLabApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: const DashboardScreen(),
+      home: appState.setupCompleted
+          ? const DashboardScreen()
+          : const OnboardingScreen(),
     );
   }
 }

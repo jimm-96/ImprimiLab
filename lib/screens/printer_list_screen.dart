@@ -5,13 +5,19 @@ import '../state/app_state.dart';
 class PrinterListScreen extends StatelessWidget {
   const PrinterListScreen({super.key});
 
-  void _showAddPrinterModal(BuildContext context) {
-    final nameCtrl = TextEditingController();
-    final powerCtrl = TextEditingController();
-    final costCtrl = TextEditingController();
-    final lifeCtrl = TextEditingController();
-    bool isResin = false;
-    DateTime? tempPurchaseDate;
+  void _showPrinterModal(BuildContext context, {Printer? printer}) {
+    final nameCtrl = TextEditingController(text: printer?.name ?? '');
+    final powerCtrl = TextEditingController(
+      text: printer?.powerW.toString() ?? '',
+    );
+    final costCtrl = TextEditingController(
+      text: printer?.cost.toString() ?? '',
+    );
+    final lifeCtrl = TextEditingController(
+      text: printer?.lifespanH.toString() ?? '',
+    );
+    bool isResin = printer?.isResin ?? false;
+    DateTime? tempPurchaseDate = printer?.purchaseDate;
 
     showModalBottomSheet(
       context: context,
@@ -31,17 +37,24 @@ class PrinterListScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Nueva Impresora',
-                      style: TextStyle(fontSize: 20, color: Colors.cyanAccent),
+                    Text(
+                      printer == null
+                          ? appState.translate('new_printer')
+                          : appState.translate('edit_printer'),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.cyanAccent,
+                      ),
                     ),
                     const SizedBox(height: 15),
                     TextField(
                       controller: nameCtrl,
-                      decoration: const InputDecoration(labelText: 'Nombre'),
+                      decoration: InputDecoration(
+                        labelText: appState.translate('printer_name'),
+                      ),
                     ),
                     SwitchListTile(
-                      title: const Text('¿Es de Resina?'),
+                      title: Text(appState.translate('is_resin')),
                       value: isResin,
                       onChanged: (val) => setStateModal(() => isResin = val),
                     ),
@@ -51,8 +64,8 @@ class PrinterListScreen extends StatelessWidget {
                           child: TextField(
                             controller: powerCtrl,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Consumo (W)',
+                            decoration: InputDecoration(
+                              labelText: appState.translate('printer_power'),
                             ),
                           ),
                         ),
@@ -61,8 +74,8 @@ class PrinterListScreen extends StatelessWidget {
                           child: TextField(
                             controller: costCtrl,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Costo (\$)',
+                            decoration: InputDecoration(
+                              labelText: appState.translate('printer_cost'),
                             ),
                           ),
                         ),
@@ -72,35 +85,49 @@ class PrinterListScreen extends StatelessWidget {
                     TextField(
                       controller: lifeCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Vida Útil Estimada (Horas)',
+                      decoration: InputDecoration(
+                        labelText: appState.translate('printer_life'),
                       ),
                     ),
                     const SizedBox(height: 10),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text("Fecha de Compra:"),
+                      title: Text(appState.translate('printer_purchase')),
                       subtitle: Text(
                         tempPurchaseDate == null
                             ? "No seleccionada"
                             : "${tempPurchaseDate!.day}/${tempPurchaseDate!.month}/${tempPurchaseDate!.year}",
                       ),
-                      trailing: IconButton(
-                        icon: const Icon(
-                          Icons.calendar_today,
-                          color: Colors.cyanAccent,
-                        ),
-                        onPressed: () async {
-                          final date = await showDatePicker(
-                            context: ctx,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(2010),
-                            lastDate: DateTime.now(),
-                          );
-                          if (date != null) {
-                            setStateModal(() => tempPurchaseDate = date);
-                          }
-                        },
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (tempPurchaseDate != null)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.clear,
+                                color: Colors.redAccent,
+                              ),
+                              onPressed: () =>
+                                  setStateModal(() => tempPurchaseDate = null),
+                            ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.calendar_today,
+                              color: Colors.cyanAccent,
+                            ),
+                            onPressed: () async {
+                              final date = await showDatePicker(
+                                context: ctx,
+                                initialDate: tempPurchaseDate ?? DateTime.now(),
+                                firstDate: DateTime(2010),
+                                lastDate: DateTime.now(),
+                              );
+                              if (date != null) {
+                                setStateModal(() => tempPurchaseDate = date);
+                              }
+                            },
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -109,9 +136,9 @@ class PrinterListScreen extends StatelessWidget {
                       children: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: const Text(
-                            'Cancelar',
-                            style: TextStyle(color: Colors.white54),
+                          child: Text(
+                            appState.translate('cancel'),
+                            style: const TextStyle(color: Colors.white54),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -125,7 +152,10 @@ class PrinterListScreen extends StatelessWidget {
                             }
                             try {
                               final p = Printer(
-                                id: DateTime.now().toString(),
+                                id:
+                                    printer?.id ??
+                                    DateTime.now().millisecondsSinceEpoch
+                                        .toString(),
                                 name: nameCtrl.text,
                                 isResin: isResin,
                                 powerW: double.parse(
@@ -138,22 +168,31 @@ class PrinterListScreen extends StatelessWidget {
                                   lifeCtrl.text.replaceAll(',', '.'),
                                 ),
                                 purchaseDate: tempPurchaseDate,
+                                isEnabled: printer?.isEnabled ?? true,
                               );
-                              appState.addPrinter(p);
+                              if (printer == null) {
+                                appState.addPrinter(p);
+                              } else {
+                                appState.updatePrinter(p);
+                              }
                               Navigator.pop(ctx);
                             } catch (e) {
                               ScaffoldMessenger.of(ctx).showSnackBar(
-                                const SnackBar(
+                                SnackBar(
                                   content: Text(
-                                    'Formato de número inválido',
-                                    style: TextStyle(color: Colors.white),
+                                    appState.translate('invalid_number'),
+                                    style: const TextStyle(color: Colors.white),
                                   ),
                                   backgroundColor: Colors.red,
                                 ),
                               );
                             }
                           },
-                          child: const Text('Guardar Impresora'),
+                          child: Text(
+                            printer == null
+                                ? appState.translate('save_printer')
+                                : appState.translate('save'),
+                          ),
                         ),
                       ],
                     ),
@@ -168,36 +207,194 @@ class PrinterListScreen extends StatelessWidget {
     );
   }
 
+  void _confirmDeletePrinter(
+    BuildContext context,
+    Printer printer, {
+    bool forceDelete = false,
+  }) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          title: Text(
+            forceDelete
+                ? appState.translate('delete_printer')
+                : '${appState.translate('inactivate')} / ${appState.translate('delete_printer')}',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+          content: Text(
+            forceDelete
+                ? '¿Estás seguro de que deseas eliminar permanentemente a "${printer.name}"?'
+                : '¿Qué deseas hacer con la impresora "${printer.name}"? Inhabilitarla la ocultará para nuevos proyectos sin alterar los existentes. Eliminarla la removerá por completo del sistema.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                appState.translate('cancel'),
+                style: const TextStyle(color: Colors.white70),
+              ),
+            ),
+            if (!forceDelete)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orangeAccent,
+                  foregroundColor: Colors.black,
+                ),
+                onPressed: () {
+                  final updated = Printer(
+                    id: printer.id,
+                    name: printer.name,
+                    isResin: printer.isResin,
+                    powerW: printer.powerW,
+                    cost: printer.cost,
+                    lifespanH: printer.lifespanH,
+                    purchaseDate: printer.purchaseDate,
+                    isEnabled: false,
+                  );
+                  appState.updatePrinter(updated);
+                  Navigator.pop(ctx);
+                },
+                child: Text(appState.translate('inactivate')),
+              ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+              onPressed: () {
+                appState.deletePrinter(printer.id);
+                Navigator.pop(ctx);
+              },
+              child: Text(appState.translate('spool_delete')),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Impresoras Disponibles',
-          style: TextStyle(color: Colors.cyanAccent),
+        title: Text(
+          appState.translate('printers'),
+          style: const TextStyle(color: Colors.cyanAccent),
         ),
       ),
       body: ListenableBuilder(
         listenable: appState,
         builder: (context, child) {
           if (appState.printers.isEmpty) {
-            return const Center(child: Text("No hay impresoras"));
+            return Center(child: Text(appState.translate('no_printers')));
           }
           return ListView.builder(
             itemCount: appState.printers.length,
             itemBuilder: (context, index) {
               final printer = appState.printers[index];
-              return ListTile(
-                leading: Icon(
-                  printer.isResin ? Icons.water_drop : Icons.print,
-                  color: Colors.cyanAccent,
-                ),
-                title: Text(
-                  printer.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  '${printer.isResin ? "Resina" : "FDM"} - ${printer.powerW}W - \$${printer.cost.round()}',
+              return Opacity(
+                opacity: printer.isEnabled ? 1.0 : 0.5,
+                child: Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  color: const Color(0xFF1E293B),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: printer.isEnabled
+                          ? Colors.white10
+                          : Colors.redAccent.withOpacity(0.3),
+                    ),
+                  ),
+                  child: ListTile(
+                    leading: Icon(
+                      printer.isResin ? Icons.water_drop : Icons.print,
+                      color: Colors.cyanAccent,
+                      size: 28,
+                    ),
+                    title: Row(
+                      children: [
+                        Text(
+                          printer.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        if (!printer.isEnabled) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            '(${appState.translate('inactive')})',
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    subtitle: Text(
+                      '${printer.isResin ? "Resina" : "FDM"} - ${printer.powerW}W - ${appState.format(printer.cost)}\nVida útil: ${printer.lifespanH.round()} hrs',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit,
+                            color: Colors.cyanAccent,
+                          ),
+                          onPressed: () =>
+                              _showPrinterModal(context, printer: printer),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            printer.isEnabled
+                                ? Icons.block
+                                : Icons.check_circle_outline,
+                            color: printer.isEnabled
+                                ? Colors.orangeAccent
+                                : Colors.greenAccent,
+                          ),
+                          tooltip: printer.isEnabled
+                              ? appState.translate('inactivate')
+                              : appState.translate('activate'),
+                          onPressed: () {
+                            if (printer.isEnabled) {
+                              _confirmDeletePrinter(context, printer);
+                            } else {
+                              final updated = Printer(
+                                id: printer.id,
+                                name: printer.name,
+                                isResin: printer.isResin,
+                                powerW: printer.powerW,
+                                cost: printer.cost,
+                                lifespanH: printer.lifespanH,
+                                purchaseDate: printer.purchaseDate,
+                                isEnabled: true,
+                              );
+                              appState.updatePrinter(updated);
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete,
+                            color: Colors.redAccent,
+                          ),
+                          onPressed: () => _confirmDeletePrinter(
+                            context,
+                            printer,
+                            forceDelete: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               );
             },
@@ -205,7 +402,7 @@ class PrinterListScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddPrinterModal(context),
+        onPressed: () => _showPrinterModal(context),
         backgroundColor: Colors.cyanAccent,
         child: const Icon(Icons.add, color: Colors.black),
       ),

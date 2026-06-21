@@ -1,0 +1,6 @@
+# Python tools for ImprimiLab development (linters, static analyzers)
+# Install via: python -m venv venv && source venv/bin/activate (or .\venv\Scripts\Activate.ps1 on Windows) && pip install -r requirements.txt
+
+flake8>=6.0.0
+black>=23.0.0
+requests>=2.31.0

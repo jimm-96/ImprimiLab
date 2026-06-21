@@ -1,33 +1,38 @@
-import 'printer.dart';
-import 'material3d.dart';
 import 'slicer_config.dart';
 
 class Piece {
-  final String name;
-  final Printer printer;
-  final Material3D material;
-  final double quantityUsed; // gramos o ml
-  final double timeHours;
-  final SlicerConfig slicerConfig;
+  String name;
+  double quantityUsed; // gramos o ml base
+  bool isLossPercent; // true = porcentaje, false = gramos o ml fijos
+  double lossValue;
+  SlicerConfig slicerConfig;
 
   Piece({
     required this.name,
-    required this.printer,
-    required this.material,
     required this.quantityUsed,
-    required this.timeHours,
+    this.isLossPercent = true,
+    this.lossValue = 0.0,
     required this.slicerConfig,
   });
 
-  double calculateMaterialCost() => quantityUsed * material.costPerUnit;
-  double calculateElectricityCost(double kwhPrice) =>
-      (printer.powerW / 1000) * timeHours * kwhPrice;
-  double calculateDepreciation() => printer.lifespanH > 0
-      ? (printer.cost / printer.lifespanH) * timeHours
-      : 0.0;
+  double get lossQuantity =>
+      isLossPercent ? (quantityUsed * lossValue / 100.0) : lossValue;
 
-  double getTotalCost(double kwhPrice) =>
-      calculateMaterialCost() +
-      calculateElectricityCost(kwhPrice) +
-      calculateDepreciation();
+  double get totalMaterialUsed => quantityUsed + lossQuantity;
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'quantityUsed': quantityUsed,
+    'isLossPercent': isLossPercent,
+    'lossValue': lossValue,
+    'slicerConfig': slicerConfig.toJson(),
+  };
+
+  factory Piece.fromJson(Map<String, dynamic> json) => Piece(
+    name: json['name'],
+    quantityUsed: (json['quantityUsed'] as num).toDouble(),
+    isLossPercent: json['isLossPercent'] as bool? ?? true,
+    lossValue: (json['lossValue'] as num?)?.toDouble() ?? 0.0,
+    slicerConfig: SlicerConfig.fromJson(json['slicerConfig']),
+  );
 }

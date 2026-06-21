@@ -1,4 +1,4 @@
-﻿# ImpriLab
+# ImpriLab
 
 ImpriLab es una aplicación móvil desarrollada en Flutter orientada a la **gestión integral y cotización de impresiones 3D**. Su propósito es facilitar a los makers y emprendimientos de manufactura aditiva (tanto en FDM como en Resina) la organización de sus pedidos, el cálculo preciso de costos de producción y la administración de sus recursos.
 
@@ -20,8 +20,10 @@ ImpriLab es una aplicación móvil desarrollada en Flutter orientada a la **gest
 ## Tecnologías y Paquetes Utilizados
 * **Framework:** [Flutter](https://flutter.dev/) - Framework de desarrollo UI multiplataforma.
 * **Lenguaje:** [Dart](https://dart.dev/)
-* **Persistencia:** shared_preferences - Para el guardado de estado local y borradores.
-* **Multimedia:** image_picker - Para la captura y selección de imágenes de referencia en los proyectos.
+* **Persistencia:** shared_preferences - Para el guardado persistente del estado global de la app, impresoras, materiales y borradores de proyectos en formato JSON.
+* **Documentación / Reportes:** [pdf](https://pub.dev/packages/pdf) y [printing](https://pub.dev/packages/printing) - Para la generación, visualización e impresión directa de cotizaciones detalladas en formato PDF.
+* **Multimedia:** image_picker - Para la captura y selección de imágenes locales de referencia.
+* **Gestión de Versiones de Dependencias:** Se utiliza el archivo `pubspec.lock` para garantizar la consistencia exacta de todas las dependencias del proyecto al trabajar desde computadores diferentes. Al clonar el repositorio, basta con ejecutar `flutter pub get` para reconstruir el entorno exacto.
 
 ## Requisitos Previos
 Para clonar y ejecutar esta aplicación, necesitas configurar tu entorno de desarrollo con:
@@ -31,25 +33,52 @@ Para clonar y ejecutar esta aplicación, necesitas configurar tu entorno de desa
 
 ## Cómo Empezar Localmente
 
+### Desarrollo Flutter
+
 1. **Clonar el repositorio:**
-   `ash
+   ```bash
    git clone https://github.com/jimm-96/ImprimiLab.git
-   `
+   ```
 
 2. **Navegar al directorio del proyecto:**
-   `ash
+   ```bash
    cd ImprimiLab
-   `
+   ```
 
-3. **Instalar las dependencias necesarias:**
-   `ash
+3. **Instalar las dependencias del proyecto:**
+   ```bash
    flutter pub get
-   `
+   ```
+   *(Nota: Esto leerá el archivo `pubspec.yaml` e instalará las versiones congeladas especificadas en `pubspec.lock`, asegurando que no haya problemas de compatibilidad entre computadores).*
 
 4. **Conectar un dispositivo o emulador y ejecutar la aplicación:**
-   `ash
+   ```bash
    flutter run
-   `
+   ```
+
+### Scripts y Herramientas Auxiliares de Python (Opcional)
+
+Si utilizas scripts auxiliares de Python en el proyecto (por ejemplo, para formateo automático de código, análisis estático con linters o automatización de análisis como SonarQube), debes configurar un entorno aislado (VENV) para evitar conflictos globales:
+
+1. **Crear el entorno virtual (VENV):**
+   ```bash
+   python -m venv venv
+   ```
+
+2. **Activar el entorno virtual:**
+   * **En Windows (PowerShell):**
+     ```powershell
+     .\venv\Scripts\Activate.ps1
+     ```
+   * **En macOS/Linux:**
+     ```bash
+     source venv/bin/activate
+     ```
+
+3. **Instalar las herramientas de desarrollo:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## Arquitectura y Estructura del Proyecto Recomendada
 
