@@ -17,6 +17,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _selectedCurrency = 'CLP';
   final _taxCtrl = TextEditingController(text: '19');
   final _customCurrencyCtrl = TextEditingController();
+  final _kwhCtrl = TextEditingController(text: '150');
 
   void _onCountryChanged(String? countryKey) {
     if (countryKey == null) return;
@@ -27,32 +28,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _selectedLanguage = 'es';
           _selectedCurrency = 'CLP';
           _taxCtrl.text = '19';
+          _kwhCtrl.text = '150';
           break;
         case 'argentina':
           _selectedLanguage = 'es';
           _selectedCurrency = 'ARS';
           _taxCtrl.text = '21';
+          _kwhCtrl.text = '60';
           break;
         case 'spain':
           _selectedLanguage = 'es';
           _selectedCurrency = 'EUR';
           _taxCtrl.text = '21';
+          _kwhCtrl.text = '0.22';
           break;
         case 'mexico':
           _selectedLanguage = 'es';
           _selectedCurrency = 'MXN';
           _taxCtrl.text = '16';
+          _kwhCtrl.text = '2.0';
           break;
         case 'usa':
           _selectedLanguage = 'en';
           _selectedCurrency = 'USD';
           _taxCtrl.text = '0';
+          _kwhCtrl.text = '0.16';
           break;
         case 'custom':
           // Custom settings - let user define
           _selectedLanguage = 'es';
           _selectedCurrency = 'USD';
           _taxCtrl.text = '0';
+          _kwhCtrl.text = '0.15';
           _customCurrencyCtrl.text = '';
           break;
       }
@@ -67,6 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         : _selectedCurrency;
 
     final double finalTax = double.tryParse(_taxCtrl.text) ?? 0.0;
+    final double finalKwh = double.tryParse(_kwhCtrl.text.replaceAll(',', '.')) ?? 0.15;
 
     String countryName = "Chile";
     switch (_selectedCountry) {
@@ -95,6 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       languageVal: _selectedLanguage,
       currencyVal: finalCurrency,
       taxRateVal: finalTax,
+      electricityPriceKwhVal: finalKwh,
     );
 
     Navigator.pushReplacement(
@@ -337,6 +346,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             }
                             if (double.tryParse(value) == null) {
                               return 'Ingresa un porcentaje válido';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Costo Eléctrico por kWh
+                        const Text(
+                          'Costo de Electricidad por kWh',
+                          style: TextStyle(
+                            color: Colors.cyanAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _kwhCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Ingresa el costo por kWh';
+                            }
+                            if (double.tryParse(value.replaceAll(',', '.')) == null) {
+                              return 'Ingresa un valor numérico válido';
                             }
                             return null;
                           },

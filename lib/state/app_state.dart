@@ -19,6 +19,7 @@ class AppState extends ChangeNotifier {
   String language = "es";
   String currency = "CLP";
   double defaultTaxRate = 19.0;
+  double defaultCalibrationWeight = 10.0;
 
   // Datos semilla pre-cargados para primer inicio
   final List<Printer> _seedPrinters = [
@@ -77,6 +78,7 @@ class AppState extends ChangeNotifier {
       language = prefs.getString('language') ?? "es";
       currency = prefs.getString('currency') ?? "CLP";
       defaultTaxRate = prefs.getDouble('defaultTaxRate') ?? 19.0;
+      defaultCalibrationWeight = prefs.getDouble('defaultCalibrationWeight') ?? 10.0;
 
       electricityPriceKwh =
           prefs.getDouble('electricityPriceKwh') ??
@@ -125,6 +127,7 @@ class AppState extends ChangeNotifier {
       await prefs.setString('language', language);
       await prefs.setString('currency', currency);
       await prefs.setDouble('defaultTaxRate', defaultTaxRate);
+      await prefs.setDouble('defaultCalibrationWeight', defaultCalibrationWeight);
 
       await prefs.setDouble('electricityPriceKwh', electricityPriceKwh);
 
@@ -158,31 +161,21 @@ class AppState extends ChangeNotifier {
     required String languageVal,
     required String currencyVal,
     required double taxRateVal,
+    required double electricityPriceKwhVal,
   }) {
     country = countryVal;
     language = languageVal;
-
-    // Si cambia de divisa, sugerimos un precio de luz coherente para evitar descalabros de costo
-    if (currency != currencyVal) {
-      if (currencyVal == 'CLP') {
-        electricityPriceKwh = 150.0;
-      } else if (currencyVal == 'ARS') {
-        electricityPriceKwh = 80.0;
-      } else if (currencyVal == 'USD') {
-        electricityPriceKwh = 0.15;
-      } else if (currencyVal == 'EUR') {
-        electricityPriceKwh = 0.20;
-      } else if (currencyVal == 'MXN') {
-        electricityPriceKwh = 2.5;
-      } else {
-        electricityPriceKwh = 0.15;
-      }
-    }
-
     currency = currencyVal;
     defaultTaxRate = taxRateVal;
+    electricityPriceKwh = electricityPriceKwhVal;
     setupCompleted = true;
 
+    saveState();
+    notifyListeners();
+  }
+
+  void updateCalibrationWeight(double weight) {
+    defaultCalibrationWeight = weight;
     saveState();
     notifyListeners();
   }

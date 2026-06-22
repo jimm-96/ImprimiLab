@@ -57,7 +57,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
   @override
   void initState() {
     super.initState();
-    _includeIva = appState.defaultTaxRate > 0;
+    _includeIva = false;
     _ivaPercent = appState.defaultTaxRate;
     _loadDraft();
   }
@@ -80,7 +80,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
         _postTimeController.text = prefs.getString('draft_post_time') ?? '0';
         _postCostController.text = prefs.getString('draft_post_cost') ?? '0';
         _includeIva =
-            prefs.getBool('draft_include_iva') ?? (appState.defaultTaxRate > 0);
+            prefs.getBool('draft_include_iva') ?? false;
         _status = prefs.getString('draft_status') ?? 'pendiente';
         _margin = prefs.getDouble('draft_margin') ?? 100.0;
 
@@ -175,7 +175,33 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: const Color(0xFF1E293B),
+      builder: (ctx) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.cyanAccent),
+                title: const Text('Galería de Imágenes', style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.cyanAccent),
+                title: const Text('Tomar Foto con Cámara', style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return;
+
+    final pickedFile = await picker.pickImage(source: source);
 
     if (pickedFile != null) {
       if (!mounted) return;
@@ -321,14 +347,73 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                 onChanged: (_) => _saveDraft(),
               ),
               const SizedBox(height: 15),
-              TextFormField(
-                controller: _collectionNameController,
-                decoration: InputDecoration(
-                  labelText: appState.translate('collection'),
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.folder_open),
-                ),
-                onChanged: (_) => _saveDraft(),
+              Autocomplete<String>(
+                optionsBuilder: (TextEditingValue textEditingValue) {
+                  final list = appState.projects
+                      .map((p) => p.collectionName.trim())
+                      .where((name) => name.isNotEmpty)
+                      .toSet()
+                      .toList();
+                  if (textEditingValue.text.isEmpty) {
+                    return list;
+                  }
+                  return list.where((String option) {
+                    return option.toLowerCase().contains(
+                      textEditingValue.text.toLowerCase(),
+                    );
+                  });
+                },
+                onSelected: (String selection) {
+                  _collectionNameController.text = selection;
+                  _saveDraft();
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4.0,
+                      color: const Color(0xFF1E293B),
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width - 32,
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          itemCount: options.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final String option = options.elementAt(index);
+                            return ListTile(
+                              title: Text(option, style: const TextStyle(color: Colors.white)),
+                              onTap: () => onSelected(option),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
+                  textController.addListener(() {
+                    if (_collectionNameController.text != textController.text) {
+                      _collectionNameController.text = textController.text;
+                      _saveDraft();
+                    }
+                  });
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (textController.text != _collectionNameController.text) {
+                      textController.text = _collectionNameController.text;
+                    }
+                  });
+                  return TextFormField(
+                    controller: textController,
+                    focusNode: focusNode,
+                    decoration: InputDecoration(
+                      labelText: appState.translate('collection'),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.folder_open),
+                    ),
+                    onFieldSubmitted: (val) => onFieldSubmitted(),
+                  );
+                },
               ),
               const SizedBox(height: 15),
               Row(

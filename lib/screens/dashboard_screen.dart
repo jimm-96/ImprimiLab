@@ -43,6 +43,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       text: appState.defaultTaxRate.toString(),
     );
     final customCurrencyCtrl = TextEditingController(text: appState.currency);
+    final kwhCtrl = TextEditingController(
+      text: appState.electricityPriceKwh.toString(),
+    );
 
     showModalBottomSheet(
       context: context,
@@ -127,28 +130,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 localLanguage = 'es';
                                 localCurrency = 'CLP';
                                 taxCtrl.text = '19';
+                                kwhCtrl.text = '150';
                                 break;
                               case 'argentina':
                                 localLanguage = 'es';
                                 localCurrency = 'ARS';
                                 taxCtrl.text = '21';
+                                kwhCtrl.text = '60';
                                 break;
                               case 'spain':
                                 localLanguage = 'es';
                                 localCurrency = 'EUR';
                                 taxCtrl.text = '21';
+                                kwhCtrl.text = '0.22';
                                 break;
                               case 'mexico':
                                 localLanguage = 'es';
                                 localCurrency = 'MXN';
                                 taxCtrl.text = '16';
+                                kwhCtrl.text = '2.0';
                                 break;
                               case 'usa':
                                 localLanguage = 'en';
                                 localCurrency = 'USD';
                                 taxCtrl.text = '0';
+                                kwhCtrl.text = '0.16';
                                 break;
                               case 'custom':
+                                kwhCtrl.text = '0.15';
                                 break;
                             }
                           });
@@ -282,6 +291,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
                       ),
                     ),
+                    const SizedBox(height: 12),
+
+                    Text(
+                      'Costo de Electricidad por kWh',
+                      style: const TextStyle(
+                        color: Colors.cyanAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextFormField(
+                      controller: kwhCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                    ),
                     const SizedBox(height: 20),
 
                     Row(
@@ -311,6 +338,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 : localCurrency;
                             final double taxVal =
                                 double.tryParse(taxCtrl.text) ?? 0.0;
+                            final double kwhVal =
+                                double.tryParse(kwhCtrl.text.replaceAll(',', '.')) ?? 0.15;
 
                             String countryName = "Chile";
                             switch (localCountry) {
@@ -339,6 +368,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               languageVal: localLanguage,
                               currencyVal: finalCurrency,
                               taxRateVal: taxVal,
+                              electricityPriceKwhVal: kwhVal,
                             );
                             Navigator.pop(ctx);
                           },
@@ -396,6 +426,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           p.collectionName.trim() == _selectedCollectionFilter,
                     )
                     .toList();
+
+          final List<DashboardItem> dashboardItems = [];
+          final looseProjects = filteredProjects
+              .where((p) => p.collectionName.trim().isEmpty)
+              .toList();
+
+          final Map<String, List<Project>> grouped = {};
+          for (var p in filteredProjects) {
+            final colName = p.collectionName.trim();
+            if (colName.isNotEmpty) {
+              grouped.putIfAbsent(colName, () => []).add(p);
+            }
+          }
+
+          for (var p in looseProjects) {
+            dashboardItems.add(DashboardItem.project(p));
+          }
+
+          grouped.forEach((colName, projs) {
+            dashboardItems.add(DashboardItem.collection(colName, projs));
+          });
 
           return Column(
             children: [
@@ -470,7 +521,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               Expanded(
-                child: filteredProjects.isEmpty
+                child: dashboardItems.isEmpty
                     ? Center(
                         child: Text(
                           _selectedCollectionFilter == 'all'
@@ -480,248 +531,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
-                        itemCount: filteredProjects.length,
+                        itemCount: dashboardItems.length,
                         itemBuilder: (context, index) {
-                          final project = filteredProjects[index];
-                          final cost = project.getTotalManufacturingCost(
-                            appState.electricityPriceKwh,
-                          );
-                          final price = project.getFinalSalePrice(
-                            appState.electricityPriceKwh,
-                          );
-
-                          String dateStr = project.deliveryDate != null
-                              ? "${project.deliveryDate!.day}/${project.deliveryDate!.month}/${project.deliveryDate!.year}"
-                              : "Sin fecha";
-                          String timeStr = project.deliveryTime != null
-                              ? project.deliveryTime!.format(context)
-                              : "";
-
-                          // Calcular color de contorno y estado traducido
-                          Color borderColor = Colors.grey;
-                          String statusText = appState.translate('own_project');
-
-                          if (project.status == 'independiente') {
-                            borderColor = Colors.cyanAccent;
-                            statusText = appState.translate('independiente');
-                          } else if (project.status == 'cancelado') {
-                            borderColor = Colors.grey.shade600;
-                            statusText = appState.translate('cancelado');
-                          } else if (project.status != 'propio') {
-                            statusText = appState.translate(project.status);
-
-                            if (project.deliveryDate != null) {
-                              final now = DateTime.now();
-                              final deliveryMidnight = DateTime(
-                                project.deliveryDate!.year,
-                                project.deliveryDate!.month,
-                                project.deliveryDate!.day,
-                              );
-                              final todayMidnight = DateTime(
-                                now.year,
-                                now.month,
-                                now.day,
-                              );
-                              final diffDays = deliveryMidnight
-                                  .difference(todayMidnight)
-                                  .inDays;
-
-                              if (diffDays <= 1) {
-                                borderColor = Colors.redAccent;
-                              } else if (diffDays <= 3) {
-                                borderColor = Colors.yellowAccent;
-                              } else {
-                                borderColor = Colors.greenAccent;
-                              }
-                            } else {
-                              borderColor = Colors.greenAccent;
-                            }
+                          final item = dashboardItems[index];
+                          if (item.isProject) {
+                            return _buildProjectCard(context, item.project!);
                           } else {
-                            borderColor = Colors.grey;
-                            statusText = appState.translate('own_project');
+                            return _buildCollectionCard(
+                              context,
+                              item.collectionName!,
+                              item.groupedProjects!,
+                            );
                           }
-
-                          return Dismissible(
-                            key: Key(project.id),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              alignment: Alignment.centerRight,
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent.withOpacity(0.8),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.delete,
-                                color: Colors.white,
-                              ),
-                            ),
-                            onDismissed: (direction) {
-                              appState.deleteProject(project);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    '${appState.translate('project_deleted')}: "${project.name}"',
-                                  ),
-                                  action: SnackBarAction(
-                                    label: appState.translate('undo'),
-                                    onPressed: () {
-                                      appState.addProject(project);
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Card(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(
-                                  color: borderColor,
-                                  width: 2.0,
-                                ),
-                              ),
-                              child: ListTile(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          ProjectDetailScreen(project: project),
-                                    ),
-                                  );
-                                },
-                                contentPadding: const EdgeInsets.all(16),
-                                title: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        project.name,
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: borderColor.withOpacity(0.12),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: borderColor.withOpacity(0.5),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        statusText,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: borderColor == Colors.grey
-                                              ? Colors.white70
-                                              : borderColor,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                subtitle: Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Camas: ${project.printBeds.length} | ${appState.translate('pieces')}: ${project.printBeds.fold(0, (sum, b) => sum + b.pieces.length)} | ${appState.translate('cost_prod')}: ${appState.format(cost)}',
-                                        style: const TextStyle(height: 1.3),
-                                      ),
-                                      if (project.status != 'independiente' &&
-                                          project.status != 'propio' &&
-                                          project.status != 'cancelado')
-                                        Text(
-                                          '${appState.translate('delivery')}: $dateStr $timeStr',
-                                          style: const TextStyle(height: 1.3),
-                                        ),
-                                      if (project.collectionName
-                                          .trim()
-                                          .isNotEmpty) ...[
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.folder_open,
-                                              size: 14,
-                                              color: Colors.cyanAccent,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              project.collectionName,
-                                              style: const TextStyle(
-                                                color: Colors.cyanAccent,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                      if (project.clientName
-                                          .trim()
-                                          .isNotEmpty) ...[
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.person_outline,
-                                              size: 14,
-                                              color: Colors.white70,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${project.clientName}${project.clientContact.trim().isNotEmpty ? " (${project.clientContact})" : ""}',
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                                trailing: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      appState.translate('suggested_sale'),
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      appState.format(price),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.greenAccent,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
                         },
                       ),
               ),
@@ -749,4 +570,335 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  Widget _buildProjectCard(BuildContext context, Project project) {
+    final cost = project.getTotalManufacturingCost(appState.electricityPriceKwh);
+    final price = project.getFinalSalePrice(appState.electricityPriceKwh);
+
+    String dateStr = project.deliveryDate != null
+        ? "${project.deliveryDate!.day}/${project.deliveryDate!.month}/${project.deliveryDate!.year}"
+        : "Sin fecha";
+    String timeStr = project.deliveryTime != null
+        ? project.deliveryTime!.format(context)
+        : "";
+
+    Color borderColor = Colors.grey;
+    String statusText = appState.translate('own_project');
+
+    switch (project.status) {
+      case 'pendiente':
+        borderColor = Colors.greenAccent;
+        statusText = appState.translate('pendiente');
+        break;
+      case 'enProceso':
+        borderColor = Colors.yellowAccent;
+        statusText = appState.translate('enProceso');
+        break;
+      case 'terminado':
+        borderColor = Colors.redAccent;
+        statusText = appState.translate('terminado');
+        break;
+      case 'propio':
+        borderColor = Colors.grey;
+        statusText = appState.translate('own_project');
+        break;
+      case 'independiente':
+        borderColor = Colors.cyanAccent;
+        statusText = appState.translate('independiente');
+        break;
+      case 'cancelado':
+        borderColor = Colors.grey.shade600;
+        statusText = appState.translate('cancelado');
+        break;
+      default:
+        borderColor = Colors.grey;
+        statusText = project.status;
+    }
+
+    return Dismissible(
+      key: Key(project.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        alignment: Alignment.centerRight,
+        decoration: BoxDecoration(
+          color: Colors.redAccent.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.delete,
+          color: Colors.white,
+        ),
+      ),
+      onDismissed: (direction) {
+        appState.deleteProject(project);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${appState.translate('project_deleted')}: "${project.name}"',
+            ),
+            action: SnackBarAction(
+              label: appState.translate('undo'),
+              onPressed: () {
+                appState.addProject(project);
+              },
+            ),
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: borderColor,
+            width: 2.0,
+          ),
+        ),
+        child: ListTile(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProjectDetailScreen(project: project),
+              ),
+            );
+          },
+          contentPadding: const EdgeInsets.all(16),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  project.name,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: borderColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: borderColor.withOpacity(0.5),
+                  ),
+                ),
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: borderColor == Colors.grey
+                        ? Colors.white70
+                        : borderColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Camas: ${project.printBeds.length} | ${appState.translate('pieces')}: ${project.printBeds.fold(0, (sum, b) => sum + b.pieces.length)} | ${appState.translate('cost_prod')}: ${appState.format(cost)}',
+                  style: const TextStyle(height: 1.3),
+                ),
+                if (project.status != 'independiente' &&
+                    project.status != 'propio' &&
+                    project.status != 'cancelado')
+                  Text(
+                    '${appState.translate('delivery')}: $dateStr $timeStr',
+                    style: const TextStyle(height: 1.3),
+                  ),
+                if (project.collectionName.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.folder_open,
+                        size: 14,
+                        color: Colors.cyanAccent,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        project.collectionName,
+                        style: const TextStyle(
+                          color: Colors.cyanAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (project.clientName.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.person_outline,
+                        size: 14,
+                        color: Colors.white70,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${project.clientName}${project.clientContact.trim().isNotEmpty ? " (${project.clientContact})" : ""}',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                appState.translate('suggested_sale'),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                appState.format(price),
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.greenAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollectionCard(BuildContext context, String collectionName, List<Project> projects) {
+    final totalPrice = projects.fold(0.0, (sum, p) => sum + p.getFinalSalePrice(appState.electricityPriceKwh));
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(
+          color: Colors.cyanAccent,
+          width: 2.0,
+        ),
+      ),
+      child: ExpansionTile(
+        leading: const Icon(Icons.folder_open, color: Colors.cyanAccent),
+        title: Text(
+          collectionName,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        subtitle: Text(
+          'Colección | ${projects.length} proyectos | Venta Total: ${appState.format(totalPrice)}',
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+        iconColor: Colors.cyanAccent,
+        collapsedIconColor: Colors.cyanAccent,
+        children: projects.map((project) {
+          final cost = project.getTotalManufacturingCost(appState.electricityPriceKwh);
+          final price = project.getFinalSalePrice(appState.electricityPriceKwh);
+
+          Color statusColor = Colors.grey;
+          switch (project.status) {
+            case 'pendiente': statusColor = Colors.greenAccent; break;
+            case 'enProceso': statusColor = Colors.yellowAccent; break;
+            case 'terminado': statusColor = Colors.redAccent; break;
+            case 'propio': statusColor = Colors.grey; break;
+            case 'independiente': statusColor = Colors.cyanAccent; break;
+            case 'cancelado': statusColor = Colors.grey.shade600; break;
+          }
+
+          return Dismissible(
+            key: Key(project.id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              alignment: Alignment.centerRight,
+              color: Colors.redAccent.withOpacity(0.8),
+              child: const Icon(Icons.delete, color: Colors.white),
+            ),
+            onDismissed: (direction) {
+              appState.deleteProject(project);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    '${appState.translate('project_deleted')}: "${project.name}"',
+                  ),
+                  action: SnackBarAction(
+                    label: appState.translate('undo'),
+                    onPressed: () {
+                      appState.addProject(project);
+                    },
+                  ),
+                ),
+              );
+            },
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              title: Text(
+                project.name,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+              subtitle: Text(
+                'Estado: ${appState.translate(project.status)} | Costo: ${appState.format(cost)}',
+                style: const TextStyle(fontSize: 12),
+              ),
+              trailing: Text(
+                appState.format(price),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: statusColor,
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProjectDetailScreen(project: project),
+                  ),
+                );
+              },
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class DashboardItem {
+  final Project? project;
+  final String? collectionName;
+  final List<Project>? groupedProjects;
+
+  DashboardItem.project(this.project)
+      : collectionName = null,
+        groupedProjects = null;
+
+  DashboardItem.collection(this.collectionName, this.groupedProjects)
+      : project = null;
+
+  bool get isProject => project != null;
+  bool get isCollection => collectionName != null;
 }

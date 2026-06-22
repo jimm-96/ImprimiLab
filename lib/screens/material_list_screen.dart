@@ -252,59 +252,143 @@ class MaterialListScreen extends StatelessWidget {
 
   void _showRefillDialog(BuildContext context, Material3D material) {
     final qtyCtrl = TextEditingController(
-      text: material.totalQuantity.toString(),
+      text: material.remainingQuantity.toString(),
     );
+    final totalWeightCtrl = TextEditingController();
+    final emptySpoolCtrl = TextEditingController(text: '220');
+    bool showScaleCalc = false;
+
     showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1E293B),
-          title: Text(
-            appState.translate('refill_material'),
-            style: const TextStyle(color: Colors.cyanAccent),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Ingresa la cantidad actual disponible de ${material.name} (Capacidad total: ${material.totalQuantity.round()}${material.isResin ? 'ml' : 'g'}):',
-                style: const TextStyle(fontSize: 14),
+        return StatefulBuilder(
+          builder: (ctx, setStateDialog) {
+            double calculatedNet = 0.0;
+            if (totalWeightCtrl.text.isNotEmpty) {
+              final totalW = double.tryParse(totalWeightCtrl.text.replaceAll(',', '.')) ?? 0.0;
+              final emptyW = double.tryParse(emptySpoolCtrl.text.replaceAll(',', '.')) ?? 0.0;
+              calculatedNet = totalW - emptyW;
+              if (calculatedNet < 0) calculatedNet = 0.0;
+            }
+
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E293B),
+              title: Text(
+                appState.translate('refill_material'),
+                style: const TextStyle(color: Colors.cyanAccent),
               ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: qtyCtrl,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: material.isResin
-                      ? 'Cantidad en ml'
-                      : 'Cantidad en gramos',
-                  border: const OutlineInputBorder(),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ingresa la cantidad actual disponible de ${material.name} (Capacidad total: ${material.totalQuantity.round()}${material.isResin ? 'ml' : 'g'}):',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 15),
+                    TextField(
+                      controller: qtyCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: material.isResin
+                            ? 'Cantidad en ml'
+                            : 'Cantidad en gramos',
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    if (!material.isResin) ...[
+                      const SizedBox(height: 15),
+                      const Divider(color: Colors.white24),
+                      TextButton.icon(
+                        onPressed: () {
+                          setStateDialog(() {
+                            showScaleCalc = !showScaleCalc;
+                          });
+                        },
+                        icon: Icon(showScaleCalc ? Icons.keyboard_arrow_up : Icons.scale),
+                        label: const Text('Calcular por Peso de Bobina (Báscula)', style: TextStyle(fontSize: 12)),
+                      ),
+                      if (showScaleCalc) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Instrucciones: Pesa la bobina completa con filamento en tu báscula y registra los datos abajo. Se restará automáticamente el peso del carrete vacío.',
+                          style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.3),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: totalWeightCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Peso Total Medido (g)',
+                            border: OutlineInputBorder(),
+                            hintText: 'Ej. 850',
+                          ),
+                          onChanged: (_) {
+                            setStateDialog(() {
+                              final totalW = double.tryParse(totalWeightCtrl.text.replaceAll(',', '.')) ?? 0.0;
+                              final emptyW = double.tryParse(emptySpoolCtrl.text.replaceAll(',', '.')) ?? 0.0;
+                              calculatedNet = totalW - emptyW;
+                              if (calculatedNet < 0) calculatedNet = 0.0;
+                              qtyCtrl.text = calculatedNet.round().toString();
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: emptySpoolCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Peso de Carrete Vacío (g)',
+                            border: OutlineInputBorder(),
+                            hintText: 'Ej. 220',
+                          ),
+                          onChanged: (_) {
+                            setStateDialog(() {
+                              final totalW = double.tryParse(totalWeightCtrl.text.replaceAll(',', '.')) ?? 0.0;
+                              final emptyW = double.tryParse(emptySpoolCtrl.text.replaceAll(',', '.')) ?? 0.0;
+                              calculatedNet = totalW - emptyW;
+                              if (calculatedNet < 0) calculatedNet = 0.0;
+                              qtyCtrl.text = calculatedNet.round().toString();
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Peso Neto Estimado: ${calculatedNet.round()}g',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.greenAccent,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ],
                 ),
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                appState.translate('cancel'),
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final double? val = double.tryParse(
-                  qtyCtrl.text.replaceAll(',', '.'),
-                );
-                if (val != null && val >= 0) {
-                  appState.updateMaterialRemaining(material.id, val);
-                  Navigator.pop(ctx);
-                }
-              },
-              child: Text(appState.translate('save')),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(
+                    appState.translate('cancel'),
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final double? val = double.tryParse(
+                      qtyCtrl.text.replaceAll(',', '.'),
+                    );
+                    if (val != null && val >= 0) {
+                      appState.updateMaterialRemaining(material.id, val);
+                      Navigator.pop(ctx);
+                    }
+                  },
+                  child: Text(appState.translate('save')),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -342,6 +426,139 @@ class MaterialListScreen extends StatelessWidget {
               child: Text(appState.translate('spool_delete')),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _showCalibrationDialog(BuildContext context, Material3D material) {
+    final weightCtrl = TextEditingController(
+      text: appState.defaultCalibrationWeight.toString(),
+    );
+    final percentCtrl = TextEditingController(text: '1.0');
+    bool useFixedWeight = true;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setStateDialog) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E293B),
+              title: const Text(
+                'Calibración y Purga de Filamento',
+                style: TextStyle(color: Colors.cyanAccent),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Instrucciones:\nRealiza una calibración, purga o cambio de color en tu impresora. Pesa el residuo en una báscula de precisión para registrar el peso real gastado en esta operación.',
+                      style: TextStyle(fontSize: 13, color: Colors.white70, height: 1.4),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RadioListTile<bool>(
+                            title: const Text('Peso Fijo (g)', style: TextStyle(fontSize: 12)),
+                            value: true,
+                            groupValue: useFixedWeight,
+                            contentPadding: EdgeInsets.zero,
+                            onChanged: (val) {
+                              setStateDialog(() => useFixedWeight = val!);
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: RadioListTile<bool>(
+                            title: const Text('Porcentaje (%)', style: TextStyle(fontSize: 12)),
+                            value: false,
+                            groupValue: useFixedWeight,
+                            contentPadding: EdgeInsets.zero,
+                            onChanged: (val) {
+                              setStateDialog(() => useFixedWeight = val!);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    if (useFixedWeight)
+                      TextField(
+                        controller: weightCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Peso a descontar (g)',
+                          border: OutlineInputBorder(),
+                        ),
+                      )
+                    else
+                      TextField(
+                        controller: percentCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Porcentaje a descontar (%)',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(
+                    appState.translate('cancel'),
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    double discount = 0.0;
+                    if (useFixedWeight) {
+                      final double? parsedWeight = double.tryParse(
+                        weightCtrl.text.replaceAll(',', '.'),
+                      );
+                      if (parsedWeight != null && parsedWeight >= 0) {
+                        discount = parsedWeight;
+                        appState.updateCalibrationWeight(discount);
+                      } else {
+                        return;
+                      }
+                    } else {
+                      final double? parsedPercent = double.tryParse(
+                        percentCtrl.text.replaceAll(',', '.'),
+                      );
+                      if (parsedPercent != null && parsedPercent >= 0 && parsedPercent <= 100) {
+                        discount = material.remainingQuantity * (parsedPercent / 100.0);
+                      } else {
+                        return;
+                      }
+                    }
+
+                    double newRemaining = material.remainingQuantity - discount;
+                    if (newRemaining < 0) newRemaining = 0.0;
+
+                    appState.updateMaterialRemaining(material.id, newRemaining);
+                    Navigator.pop(ctx);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Se descontaron ${discount.toStringAsFixed(1)}g por calibración/purga.',
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  child: const Text('Descontar'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -438,6 +655,15 @@ class MaterialListScreen extends StatelessWidget {
                           tooltip: 'Recargar Bobina/Tina',
                           onPressed: () => _showRefillDialog(context, material),
                         ),
+                        if (!material.isResin)
+                          IconButton(
+                            icon: const Icon(
+                              Icons.tune,
+                              color: Colors.orangeAccent,
+                            ),
+                            tooltip: 'Calibración / Purga',
+                            onPressed: () => _showCalibrationDialog(context, material),
+                          ),
                         IconButton(
                           icon: const Icon(
                             Icons.delete,
