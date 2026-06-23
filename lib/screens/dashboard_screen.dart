@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../state/app_state.dart';
+import '../models/project.dart';
 import 'printer_list_screen.dart';
 import 'material_list_screen.dart';
 import 'new_project_screen.dart';

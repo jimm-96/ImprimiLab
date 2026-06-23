@@ -1,99 +1,118 @@
-# ImpriLab
+# ImpriLab 🧪🚀
 
-ImpriLab es una aplicación móvil desarrollada en Flutter orientada a la **gestión integral y cotización de impresiones 3D**. Su propósito es facilitar a los makers y emprendimientos de manufactura aditiva (tanto en FDM como en Resina) la organización de sus pedidos, el cálculo preciso de costos de producción y la administración de sus recursos.
+ImpriLab es una aplicación multiplataforma (Móvil y Escritorio) desarrollada en Flutter orientada a la **gestión integral, cotización y control de stock para impresión 3D**. 
 
-## Características Actuales (MVP Implementado)
+Diseñada específicamente para makers, talleres y emprendimientos de manufactura aditiva (tanto en tecnología FDM como en Resina), ImpriLab permite calcular costos exactos de producción, administrar recursos e inventario en tiempo real y exportar cotizaciones detalladas en formato profesional.
 
-* **Cálculo Avanzado de Costos:** Calcula el costo real de producción sumando consumo de material, gasto eléctrico (KWh y consumo de la máquina), depreciación de la impresora por horas de uso, y mano de obra.
-* **Soporte Multitecnología (FDM y Resina):** Perfiles de laminación (Slicer) independientes. Permite registrar parámetros específicos como tiempos de exposición para resina, o temperaturas y relleno para FDM.
-* **Gestión Completa de Proyectos (Pedidos):** 
-  * Inclusión de múltiples piezas por proyecto.
-  * Tiempos y fechas de entrega exactos.
-  * Niveles de prioridad (Alta, Media, Baja).
-  * Opciones de post-procesado (Lijado/Limpieza, Pintura/Imprimación).
-  * Adjunte de evidencia fotográfica del modelo o pieza.
-* **Cotizador Inteligente:** Sugiere un precio de venta final basado en el costo total de producción y un margen de ganancia (%) ajustable en tiempo real mediante un slider.
-* **Gestión de Inventario:** Registro detallado de impresoras (vida útil, costo, consumo en Watts) y materiales (resinas y filamentos, precio, cantidad disponible).
-* **Exportación Rápida:** Función de copiado rápido al portapapeles de un resumen detallado del proyecto (incluyendo fechas y precios) listo para enviar por mensaje al cliente.
-* **Auto-guardado (Borradores):** Persistencia local de datos al crear un nuevo proyecto para no perder información si se cierra la pantalla accidentalmente.
+---
 
-## Tecnologías y Paquetes Utilizados
-* **Framework:** [Flutter](https://flutter.dev/) - Framework de desarrollo UI multiplataforma.
-* **Lenguaje:** [Dart](https://dart.dev/)
-* **Persistencia:** shared_preferences - Para el guardado persistente del estado global de la app, impresoras, materiales y borradores de proyectos en formato JSON.
-* **Documentación / Reportes:** [pdf](https://pub.dev/packages/pdf) y [printing](https://pub.dev/packages/printing) - Para la generación, visualización e impresión directa de cotizaciones detalladas en formato PDF.
-* **Multimedia:** image_picker - Para la captura y selección de imágenes locales de referencia.
-* **Gestión de Versiones de Dependencias:** Se utiliza el archivo `pubspec.lock` para garantizar la consistencia exacta de todas las dependencias del proyecto al trabajar desde computadores diferentes. Al clonar el repositorio, basta con ejecutar `flutter pub get` para reconstruir el entorno exacto.
+## 📱 Plataformas Soportadas
 
-## Requisitos Previos
-Para clonar y ejecutar esta aplicación, necesitas configurar tu entorno de desarrollo con:
-* [Git](https://git-scm.com)
-* [Flutter SDK](https://docs.flutter.dev/get-started/install) (Asegúrate de tener instaladas las dependencias de Android/iOS según corresponda).
-* IDE recomendado: [Visual Studio Code](https://code.visualstudio.com/) (con la extensión de Flutter) o [Android Studio](https://developer.android.com/studio).
+*   **Móvil:** Android & iOS (Persistencia SQLite nativa).
+*   **Escritorio:** Windows & macOS (Persistencia SQLite mediante enlace FFI nativo).
 
-## Cómo Empezar Localmente
+---
 
-### Desarrollo Flutter
+## ✨ Características Principales
 
-1. **Clonar el repositorio:**
-   ```bash
-   git clone https://github.com/jimm-96/ImprimiLab.git
-   ```
+*   **🧮 Cálculo Avanzado de Costos:** Calcula costos reales sumando consumo exacto de material (con soporte para porcentaje de merma), consumo eléctrico (según potencia de máquina y tarifa de luz local), depreciación horaria del equipo y tarifas de mano de obra.
+*   **🛢️ Control de Inventario en Tiempo Real:** Gestión de stock para filamentos y resinas. La aplicación deduce y reembolsa de manera inteligente las cantidades consumidas al crear, modificar o eliminar proyectos (pedidos).
+*   **⚙️ Soporte Multitecnología (FDM & Resina):** Parámetros específicos para cada tecnología mediante perfiles de laminación (Slicer) dedicados (ej. tiempo de exposición para resina, altura de capa y soportes para FDM).
+*   **📁 Gestión de Proyectos (Camas de Impresión Múltiples):** Permite organizar cada trabajo en múltiples camas de impresión independientes, conteniendo una o varias piezas cada una.
+*   **📋 Cotizador y Margen Dinámico:** Configuración en tiempo real del margen de ganancia (%) mediante un slider interactivo, con visualización instantánea de costos de fabricación, IVA y precios de venta sugeridos.
+*   **📄 Exportación Profesional (PDF & Portapapeles):** Generación directa de reportes y presupuestos en PDF con formato de alta calidad listos para imprimir o enviar, así como resúmenes rápidos de texto para mensajería instantánea.
+*   **💾 Persistencia Local Híbrida:** Base de datos relacional SQLite para el almacenamiento estructurado de impresoras, materiales y proyectos, combinada con almacenamiento seguro de preferencias del usuario.
 
-2. **Navegar al directorio del proyecto:**
-   ```bash
-   cd ImprimiLab
-   ```
+---
 
-3. **Instalar las dependencias del proyecto:**
-   ```bash
-   flutter pub get
-   ```
-   *(Nota: Esto leerá el archivo `pubspec.yaml` e instalará las versiones congeladas especificadas en `pubspec.lock`, asegurando que no haya problemas de compatibilidad entre computadores).*
+## 🛠️ Arquitectura y Estructura del Proyecto
 
-4. **Conectar un dispositivo o emulador y ejecutar la aplicación:**
-   ```bash
-   flutter run
-   ```
+El proyecto sigue una estructura limpia, modular y escalable para facilitar el mantenimiento y la extensibilidad:
 
-### Scripts y Herramientas Auxiliares de Python (Opcional)
+```
+lib/
+├── models/             # Entidades del dominio (Project, PrintBed, Piece, Printer, Material3D, SlicerConfig)
+├── screens/            # Vistas y flujos principales de la UI (Dashboard, NewProject, ProjectDetail, etc.)
+├── services/           # Servicios externos y lógica de persistencia (DatabaseService, PdfService, LocalizationService)
+├── state/              # Manejo de estado centralizado (AppState con lógica de stock e internacionalización)
+└── widgets/            # Componentes UI reutilizables y modales extraídos (PrintBedModal, PieceModal, etc.)
+test/
+└── calculations_test.dart  # Suite completa de pruebas unitarias (cálculos matemáticos, stock e inventario)
+```
 
-Si utilizas scripts auxiliares de Python en el proyecto (por ejemplo, para formateo automático de código, análisis estático con linters o automatización de análisis como SonarQube), debes configurar un entorno aislado (VENV) para evitar conflictos globales:
+---
 
-1. **Crear el entorno virtual (VENV):**
+## ⚙️ Tecnologías y Dependencias Core
+
+*   **Framework:** [Flutter](https://flutter.dev/) (SDK >= 3.11.5)
+*   **Lenguaje:** [Dart](https://dart.dev/)
+*   **Motor de Base de Datos:** `sqflite` (Móvil) & `sqflite_common_ffi` (Desktop)
+*   **Reportes y PDF:** `pdf` & `printing`
+*   **Acceso Multimedia:** `image_picker`
+*   **Internacionalización:** Localización integrada con soporte dinámico para divisas (CLP, MXN, USD, EUR, ARS).
+
+---
+
+## 🚀 Instalación y Configuración Local
+
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/jimm-96/ImprimiLab.git
+cd ImprimiLab
+```
+
+### 2. Configurar dependencias
+Instala los paquetes necesarios definidos en el archivo `pubspec.yaml` (garantizando versiones idénticas usando `pubspec.lock`):
+```bash
+flutter pub get
+```
+
+### 3. Ejecutar la Aplicación
+Asegúrate de tener un emulador activo o un dispositivo físico conectado:
+```bash
+flutter run
+```
+
+---
+
+## 🧪 Pruebas Unitarias y Análisis Estático
+
+Para garantizar la fiabilidad del software y la precisión matemática del cotizador:
+
+### Ejecutar Suite de Pruebas
+Valida los cálculos del costo de fabricación, depreciación horaria, cálculos eléctricos, margen de venta sugerida y flujos de stock en `AppState`:
+```bash
+flutter test
+```
+
+### Ejecutar Análisis Estático (Linter)
+Verifica que el código mantenga los estándares de calidad definidos por la comunidad Flutter:
+```bash
+flutter analyze
+```
+
+---
+
+## 🐍 Herramientas Auxiliares de Python (Opcional)
+
+Si utilizas scripts auxiliares de Python en el proyecto (por ejemplo, para integraciones CI/CD o análisis estáticos externos):
+
+1. **Crear Entorno Virtual:**
    ```bash
    python -m venv venv
    ```
-
-2. **Activar el entorno virtual:**
-   * **En Windows (PowerShell):**
-     ```powershell
-     .\venv\Scripts\Activate.ps1
-     ```
-   * **En macOS/Linux:**
-     ```bash
-     source venv/bin/activate
-     ```
-
-3. **Instalar las herramientas de desarrollo:**
+2. **Activar Entorno Virtual:**
+   * En **Windows (PowerShell):** `.\venv\Scripts\Activate.ps1`
+   * En **macOS/Linux:** `source venv/bin/activate`
+3. **Instalar Dependencias:**
    ```bash
    pip install -r requirements.txt
    ```
 
-## Arquitectura y Estructura del Proyecto Recomendada
+---
 
-A medida que el proyecto siga escalando fuera del MVP, se recomienda transicionar a la siguiente arquitectura de carpetas dentro de lib/:
+## 🗺️ Roadmap de Futuras Mejoras
 
-* main.dart: Punto de entrada y configuración de tema.
-* models/: Definición de clases de negocio (Printer, Material3D, Piece, Project, SlicerConfig).
-* screens/: Pantallas principales (DashboardScreen, NewProjectScreen, ProjectDetailScreen, etc.).
-* widgets/: Componentes UI reutilizables (tarjetas de proyectos, modales de ingreso).
-* state/ o providers/: Gestión global del estado de la aplicación.
-* services/: Lógica de persistencia (SharedPreferences, futura base de datos) y utilidades externas.
-
-## Roadmap (Próximas Mejoras)
-
-* **Directorio de Clientes:** Administración de información de contacto y vinculación con proyectos.
-* **Seguimiento de Estados:** Tablero tipo Kanban para el progreso de pedidos (En cola, Imprimiendo, Post-procesado, Finalizado, Entregado).
-* **Migración de Estado:** Transición de ChangeNotifier a Riverpod o Provider para un escalado más robusto.
-* **Base de Datos:** Implementación de SQLite o Firebase para persistencia permanente de proyectos finalizados y control de stock en tiempo real.
+*   [ ] **Directorio de Clientes:** Vinculación de proyectos con fichas detalladas de clientes y datos de contacto.
+*   [ ] **Tablero Kanban:** Seguimiento visual del estado de producción de cada cama de impresión (En cola ➡️ Imprimiendo ➡️ Post-procesado ➡️ Entregado).
+*   [ ] **Migración de Estado Avanzada:** Integración de Riverpod para mejorar la escalabilidad y testabilidad en la UI.
