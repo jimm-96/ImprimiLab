@@ -201,44 +201,68 @@ class AppState extends ChangeNotifier {
   // Métodos de gestión de impresoras con SQLite
   void addPrinter(Printer printer) async {
     printers.add(printer);
-    await DatabaseService.instance.insertPrinter(printer);
     notifyListeners();
+    try {
+      await DatabaseService.instance.insertPrinter(printer);
+    } catch (e) {
+      debugPrint("Error al guardar impresora en DB: $e");
+    }
   }
 
   void deletePrinter(String id) async {
     printers.removeWhere((p) => p.id == id);
-    await DatabaseService.instance.deletePrinter(id);
     notifyListeners();
+    try {
+      await DatabaseService.instance.deletePrinter(id);
+    } catch (e) {
+      debugPrint("Error al eliminar impresora de DB: $e");
+    }
   }
 
   void updatePrinter(Printer printer) async {
     final idx = printers.indexWhere((p) => p.id == printer.id);
     if (idx != -1) {
       printers[idx] = printer;
-      await DatabaseService.instance.updatePrinter(printer);
       notifyListeners();
+      try {
+        await DatabaseService.instance.updatePrinter(printer);
+      } catch (e) {
+        debugPrint("Error al actualizar impresora en DB: $e");
+      }
     }
   }
 
   // Métodos de gestión de materiales con SQLite
   void addMaterial(Material3D material) async {
     materials.add(material);
-    await DatabaseService.instance.insertMaterial(material);
     notifyListeners();
+    try {
+      await DatabaseService.instance.insertMaterial(material);
+    } catch (e) {
+      debugPrint("Error al guardar material en DB: $e");
+    }
   }
 
   void deleteMaterial(String id) async {
     materials.removeWhere((m) => m.id == id);
-    await DatabaseService.instance.deleteMaterial(id);
     notifyListeners();
+    try {
+      await DatabaseService.instance.deleteMaterial(id);
+    } catch (e) {
+      debugPrint("Error al eliminar material de DB: $e");
+    }
   }
 
   void updateMaterial(Material3D material) async {
     final idx = materials.indexWhere((m) => m.id == material.id);
     if (idx != -1) {
       materials[idx] = material;
-      await DatabaseService.instance.updateMaterial(material);
       notifyListeners();
+      try {
+        await DatabaseService.instance.updateMaterial(material);
+      } catch (e) {
+        debugPrint("Error al actualizar material en DB: $e");
+      }
     }
   }
 
@@ -246,73 +270,93 @@ class AppState extends ChangeNotifier {
     final idx = materials.indexWhere((m) => m.id == id);
     if (idx != -1) {
       materials[idx].remainingQuantity = newRemaining;
-      await DatabaseService.instance.updateMaterial(materials[idx]);
       notifyListeners();
+      try {
+        await DatabaseService.instance.updateMaterial(materials[idx]);
+      } catch (e) {
+        debugPrint("Error al actualizar stock de material en DB: $e");
+      }
     }
   }
 
   // Métodos de gestión de proyectos y deducción de stock con SQLite
-  void addProject(Project project) async {
+  Future<void> addProject(Project project) async {
     projects.add(project);
     deductMaterialForProject(project);
-    await DatabaseService.instance.insertProject(project);
-    // Guardar cambios de stock en base de datos
-    for (var bed in project.printBeds) {
-      final matIdx = materials.indexWhere((m) => m.id == bed.material.id);
-      if (matIdx != -1) {
-        await DatabaseService.instance.updateMaterial(materials[matIdx]);
-      }
-    }
     notifyListeners();
+    try {
+      await DatabaseService.instance.insertProject(project);
+      // Guardar cambios de stock en base de datos
+      for (var bed in project.printBeds) {
+        final matIdx = materials.indexWhere((m) => m.id == bed.material.id);
+        if (matIdx != -1) {
+          await DatabaseService.instance.updateMaterial(materials[matIdx]);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error al guardar proyecto en DB: $e");
+    }
   }
 
-  void deleteProject(Project project) async {
+  Future<void> deleteProject(Project project) async {
     projects.removeWhere((p) => p.id == project.id);
     refundMaterialForProject(project);
-    await DatabaseService.instance.deleteProject(project.id);
-    // Guardar cambios de stock en base de datos
-    for (var bed in project.printBeds) {
-      final matIdx = materials.indexWhere((m) => m.id == bed.material.id);
-      if (matIdx != -1) {
-        await DatabaseService.instance.updateMaterial(materials[matIdx]);
+    notifyListeners();
+    try {
+      await DatabaseService.instance.deleteProject(project.id);
+      // Guardar cambios de stock en base de datos
+      for (var bed in project.printBeds) {
+        final matIdx = materials.indexWhere((m) => m.id == bed.material.id);
+        if (matIdx != -1) {
+          await DatabaseService.instance.updateMaterial(materials[matIdx]);
+        }
       }
+    } catch (e) {
+      debugPrint("Error al eliminar proyecto de DB: $e");
     }
-    notifyListeners();
   }
 
-  void updateProject() async {
-    // Si hay cambios locales sueltos, guardarlos todos en BD
-    for (var p in projects) {
-      await DatabaseService.instance.updateProject(p);
-    }
+  Future<void> updateProject() async {
     notifyListeners();
+    try {
+      // Si hay cambios locales sueltos, guardarlos todos en BD
+      for (var p in projects) {
+        await DatabaseService.instance.updateProject(p);
+      }
+    } catch (e) {
+      debugPrint("Error al actualizar proyectos en DB: $e");
+    }
   }
 
-  void updateProjectState(Project updatedProject) async {
+  Future<void> updateProjectState(Project updatedProject) async {
     final idx = projects.indexWhere((p) => p.id == updatedProject.id);
     if (idx != -1) {
       final oldProject = projects[idx];
       refundMaterialForProject(oldProject);
       deductMaterialForProject(updatedProject);
       projects[idx] = updatedProject;
-
-      await DatabaseService.instance.updateProject(updatedProject);
-      // Actualizar materiales cuyo stock pudo haber cambiado
-      final materialIdsToUpdate = <String>{};
-      for (var bed in oldProject.printBeds) {
-        materialIdsToUpdate.add(bed.material.id);
-      }
-      for (var bed in updatedProject.printBeds) {
-        materialIdsToUpdate.add(bed.material.id);
-      }
-
-      for (var matId in materialIdsToUpdate) {
-        final matIdx = materials.indexWhere((m) => m.id == matId);
-        if (matIdx != -1) {
-          await DatabaseService.instance.updateMaterial(materials[matIdx]);
-        }
-      }
       notifyListeners();
+
+      try {
+        await DatabaseService.instance.updateProject(updatedProject);
+        // Actualizar materiales cuyo stock pudo haber cambiado
+        final materialIdsToUpdate = <String>{};
+        for (var bed in oldProject.printBeds) {
+          materialIdsToUpdate.add(bed.material.id);
+        }
+        for (var bed in updatedProject.printBeds) {
+          materialIdsToUpdate.add(bed.material.id);
+        }
+
+        for (var matId in materialIdsToUpdate) {
+          final matIdx = materials.indexWhere((m) => m.id == matId);
+          if (matIdx != -1) {
+            await DatabaseService.instance.updateMaterial(materials[matIdx]);
+          }
+        }
+      } catch (e) {
+        debugPrint("Error al actualizar estado del proyecto en DB: $e");
+      }
     }
   }
 

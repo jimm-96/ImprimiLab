@@ -37,8 +37,14 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        await db.execute('DROP TABLE IF EXISTS printers');
+        await db.execute('DROP TABLE IF EXISTS materials');
+        await db.execute('DROP TABLE IF EXISTS projects');
+        await _createDB(db, newVersion);
+      },
     );
   }
 

@@ -641,8 +641,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             action: SnackBarAction(
               label: appState.translate('undo'),
-              onPressed: () {
-                appState.addProject(project);
+              onPressed: () async {
+                await appState.addProject(project);
               },
             ),
           ),
@@ -847,8 +847,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   action: SnackBarAction(
                     label: appState.translate('undo'),
-                    onPressed: () {
-                      appState.addProject(project);
+                    onPressed: () async {
+                      await appState.addProject(project);
                     },
                   ),
                 ),

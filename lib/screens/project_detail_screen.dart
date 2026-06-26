@@ -81,7 +81,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     _status = _currentProject.status;
   }
 
-  void _saveChanges() {
+  Future<void> _saveChanges() async {
     final updatedProject = Project(
       id: _currentProject.id,
       name: _nameCtrl.text,
@@ -109,20 +109,22 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       collectionName: _collectionNameCtrl.text,
     );
 
-    appState.updateProjectState(updatedProject);
+    await appState.updateProjectState(updatedProject);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          appState.translate('project_updated'),
-          style: const TextStyle(color: Colors.black),
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            appState.translate('project_updated'),
+            style: const TextStyle(color: Colors.black),
+          ),
+          backgroundColor: Colors.cyanAccent,
         ),
-        backgroundColor: Colors.cyanAccent,
-      ),
-    );
-    setState(() {
-      _currentProject = updatedProject;
-    });
+      );
+      setState(() {
+        _currentProject = updatedProject;
+      });
+    }
   }
 
   void _showAddOrEditPrintBedModal(BuildContext context, int? indexToEdit) {

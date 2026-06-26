@@ -167,7 +167,12 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
 
   Future<void> _clearDraft() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    final keys = prefs.getKeys();
+    for (final key in keys) {
+      if (key.startsWith('draft_')) {
+        await prefs.remove(key);
+      }
+    }
   }
 
   Future<void> _pickImage() async {
@@ -212,7 +217,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
     }
   }
 
-  void _saveProject() {
+  Future<void> _saveProject() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -253,9 +258,11 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
       notes: _notesController.text,
     );
 
-    appState.addProject(project);
-    _clearDraft();
-    Navigator.pop(context);
+    await appState.addProject(project);
+    await _clearDraft();
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   double getMaterialsCost() {
