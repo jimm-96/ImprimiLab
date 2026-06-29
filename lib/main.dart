@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'state/app_state.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await appState.init();
+  await NotificationService.instance.init();
   runApp(const ImpriLabApp());
 }
 

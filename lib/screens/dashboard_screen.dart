@@ -5,6 +5,7 @@ import 'printer_list_screen.dart';
 import 'material_list_screen.dart';
 import 'new_project_screen.dart';
 import 'project_detail_screen.dart';
+import 'notification_settings_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -403,6 +404,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications, color: Colors.cyanAccent),
+            tooltip: 'Notificaciones',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationSettingsScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.cyanAccent),
             tooltip: appState.translate('settings'),
