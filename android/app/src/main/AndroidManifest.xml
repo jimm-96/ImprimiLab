@@ -35,7 +35,9 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- Receiver for flutter_local_notifications scheduling -->
+        <!-- Receivers for flutter_local_notifications scheduling -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>

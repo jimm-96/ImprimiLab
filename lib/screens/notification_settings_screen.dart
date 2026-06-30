@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../services/notification_service.dart';
@@ -6,10 +7,12 @@ class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  State<NotificationSettingsScreen> createState() =>
+      _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState
+    extends State<NotificationSettingsScreen> {
   final _service = NotificationService.instance;
 
   bool _isPermissionGranted = false;
@@ -26,6 +29,13 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   late TextEditingController _recurringBodyCtrl;
   late TimeOfDay _recurringTime;
 
+  // Test countdown state
+  int _testCountdown = 0;
+  Timer? _countdownTimer;
+
+  // Future for pending notifications
+  late Future<List<PendingNotificationRequest>> _pendingRequestsFuture;
+
   @override
   void initState() {
     super.initState();
@@ -41,10 +51,22 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     _recurringTitleCtrl = TextEditingController(text: _service.recurringTitle);
     _recurringBodyCtrl = TextEditingController(text: _service.recurringBody);
     _recurringTime = _service.recurringTime;
+
+    // Initialize the pending requests future
+    _pendingRequestsFuture = _service.getPendingRequests();
+  }
+
+  void _refreshPendingRequests() {
+    if (mounted) {
+      setState(() {
+        _pendingRequestsFuture = _service.getPendingRequests();
+      });
+    }
   }
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _scheduledTitleCtrl.dispose();
     _scheduledBodyCtrl.dispose();
     _recurringTitleCtrl.dispose();
@@ -186,7 +208,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
           backgroundColor: Colors.cyan,
         ),
       );
-      setState(() {}); // Refresh view to update pending list
+      _refreshPendingRequests(); // Refresh view and pending list smoothly
     }
   }
 
@@ -201,7 +223,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       appBar: AppBar(
         title: const Text(
           'Ajustes de Notificaciones',
-          style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.cyanAccent,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.cyanAccent),
@@ -227,7 +252,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         height: 12,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _isPermissionGranted ? Colors.greenAccent : Colors.redAccent,
+                          color: _isPermissionGranted
+                              ? Colors.greenAccent
+                              : Colors.redAccent,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -236,7 +263,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: _isPermissionGranted ? Colors.greenAccent : Colors.redAccent,
+                          color: _isPermissionGranted
+                              ? Colors.greenAccent
+                              : Colors.redAccent,
                         ),
                       ),
                     ],
@@ -257,7 +286,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
             // Scheduled Notification Card (Unique)
             _buildCard(
-              title: 'Notificación Programada (Única)',
+              title: 'Notificación Programada',
               icon: Icons.calendar_today,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -265,7 +294,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Activar Recordatorio Único'),
-                    subtitle: const Text('Ideal para avisar del fin de una impresión o entrega.'),
+                    subtitle: const Text(
+                      'Ideal para avisar del fin de una impresión o entrega.',
+                    ),
                     value: _isScheduledActive,
                     activeColor: Colors.cyanAccent,
                     onChanged: (val) {
@@ -297,18 +328,24 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                       contentPadding: EdgeInsets.zero,
                       title: const Text(
                         'Fecha y Hora Programada:',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.cyanAccent,
+                        ),
                       ),
                       subtitle: Text(
                         _formatDateTime(_scheduledTime),
                         style: const TextStyle(fontSize: 15),
                       ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.edit_calendar, color: Colors.cyanAccent),
+                        icon: const Icon(
+                          Icons.edit_calendar,
+                          color: Colors.cyanAccent,
+                        ),
                         onPressed: _selectDateTime,
                       ),
                     ),
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -316,7 +353,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
             // Recurring Notification Card (Periodic)
             _buildCard(
-              title: 'Notificación Recurrente (Diaria)',
+              title: 'Notificación Recurrente',
               icon: Icons.update,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -324,7 +361,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Activar Recordatorio Diario'),
-                    subtitle: const Text('Ideal para recordar control de stock o mantenimiento diario.'),
+                    subtitle: const Text(
+                      'Ideal para recordar control de stock o mantenimiento diario.',
+                    ),
                     value: _isRecurringActive,
                     activeColor: Colors.cyanAccent,
                     onChanged: (val) {
@@ -356,18 +395,24 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                       contentPadding: EdgeInsets.zero,
                       title: const Text(
                         'Hora de Alerta Diaria:',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.cyanAccent,
+                        ),
                       ),
                       subtitle: Text(
                         _recurringTime.format(context),
                         style: const TextStyle(fontSize: 15),
                       ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.access_time, color: Colors.cyanAccent),
+                        icon: const Icon(
+                          Icons.access_time,
+                          color: Colors.cyanAccent,
+                        ),
                         onPressed: _selectRecurringTime,
                       ),
                     ),
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -380,10 +425,6 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Usa estos botones para verificar el funcionamiento de las notificaciones nativas de inmediato.',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -400,7 +441,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                             await _service.showInstantNotification(
                               id: NotificationService.testNotificationId,
                               title: '🔔 ¡Prueba Instantánea Exitosa!',
-                              body: 'Esta notificación demuestra que las notificaciones de ImprimiLab funcionan correctamente en este dispositivo.',
+                              body:
+                                  'Esta notificación demuestra que las notificaciones de ImprimiLab funcionan correctamente en este dispositivo.',
                             );
                           },
                         ),
@@ -409,30 +451,62 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                       Expanded(
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orangeAccent,
+                            backgroundColor: _testCountdown > 0 ? Colors.grey : Colors.orangeAccent,
                             foregroundColor: Colors.black,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          icon: const Icon(Icons.timer),
-                          label: const Text('Prueba en 5 Seg'),
-                          onPressed: () async {
-                            final scheduledTime = DateTime.now().add(const Duration(seconds: 5));
-                            await _service.scheduleUniqueNotification(
-                              id: NotificationService.testScheduledNotificationId,
-                              title: '⏰ Recordatorio de Prueba',
-                              body: 'Este recordatorio de 5 segundos funciona de forma idéntica a tus recordatorios a largo plazo.',
-                              scheduledDate: scheduledTime,
+                          icon: Icon(_testCountdown > 0 ? Icons.hourglass_bottom : Icons.timer),
+                          label: Text(_testCountdown > 0 ? 'Espera (${_testCountdown}s)' : 'Prueba en 5 Seg'),
+                          onPressed: _testCountdown > 0 ? null : () async {
+                            final scheduledTime = DateTime.now().add(
+                              const Duration(seconds: 5),
                             );
+                            await _service.scheduleUniqueNotification(
+                              id: NotificationService
+                                  .testScheduledNotificationId,
+                              title: '⏰ Recordatorio de Prueba',
+                              body:
+                                  'Este recordatorio de 5 segundos funciona de forma idéntica a tus recordatorios a largo plazo.',
+                              scheduledDate: scheduledTime,
+                              isTest: true,
+                            );
+
+                            setState(() {
+                              _testCountdown = 5;
+                            });
+
+                            _countdownTimer?.cancel();
+                            _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+                              if (mounted) {
+                                setState(() {
+                                  if (_testCountdown > 0) {
+                                    _testCountdown--;
+                                  } else {
+                                    timer.cancel();
+                                    _refreshPendingRequests();
+                                  }
+                                });
+                              } else {
+                                timer.cancel();
+                              }
+                            });
+
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Notificación de prueba programada para dentro de 5 segundos. Cierra o sal de la app.'),
+                                content: Text(
+                                  'Notificación de prueba programada para dentro de 5 segundos. Cierra o sal de la app.',
+                                ),
                                 duration: Duration(seconds: 4),
                               ),
                             );
+
                             // Refresh list to show pending
-                            Future.delayed(const Duration(milliseconds: 500), () {
-                              if (mounted) setState(() {});
-                            });
+                            Future.delayed(
+                              const Duration(milliseconds: 500),
+                              () {
+                                _refreshPendingRequests();
+                              },
+                            );
                           },
                         ),
                       ),
@@ -456,7 +530,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   ),
                   const SizedBox(height: 10),
                   FutureBuilder<List<PendingNotificationRequest>>(
-                    future: _service.getPendingRequests(),
+                    future: _pendingRequestsFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
@@ -466,7 +540,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                           padding: EdgeInsets.symmetric(vertical: 8.0),
                           child: Text(
                             'No hay notificaciones programadas activas.',
-                            style: TextStyle(color: Colors.white54, fontStyle: FontStyle.italic),
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontStyle: FontStyle.italic,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         );
@@ -478,11 +555,15 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         itemBuilder: (ctx, index) {
                           final req = snapshot.data![index];
                           String typeLabel = "Desconocido";
-                          if (req.id == NotificationService.uniqueScheduledNotificationId) {
+                          if (req.id ==
+                              NotificationService
+                                  .uniqueScheduledNotificationId) {
                             typeLabel = "Recordatorio Único";
-                          } else if (req.id == NotificationService.recurringNotificationId) {
+                          } else if (req.id ==
+                              NotificationService.recurringNotificationId) {
                             typeLabel = "Recordatorio Diario";
-                          } else if (req.id == NotificationService.testScheduledNotificationId) {
+                          } else if (req.id ==
+                              NotificationService.testScheduledNotificationId) {
                             typeLabel = "Prueba (5 segundos)";
                           }
 
@@ -491,17 +572,28 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                             decoration: BoxDecoration(
                               color: const Color(0xFF0F172A),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.cyanAccent.withOpacity(0.2)),
+                              border: Border.all(
+                                color: Colors.cyanAccent.withOpacity(0.2),
+                              ),
                             ),
                             child: ListTile(
-                              leading: const Icon(Icons.alarm, color: Colors.cyanAccent),
+                              leading: const Icon(
+                                Icons.alarm,
+                                color: Colors.cyanAccent,
+                              ),
                               title: Text(
                                 req.title ?? 'Sin Título',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
                               ),
                               subtitle: Text(
                                 'Tipo: $typeLabel\nMsg: ${req.body ?? ''}',
-                                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white70,
+                                ),
                               ),
                               isThreeLine: true,
                             ),
@@ -522,7 +614,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                       await _service.cancelAll();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Todas las notificaciones programadas han sido canceladas.'),
+                          content: Text(
+                            'Todas las notificaciones programadas han sido canceladas.',
+                          ),
                           backgroundColor: Colors.redAccent,
                         ),
                       );
@@ -530,6 +624,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         _isScheduledActive = false;
                         _isRecurringActive = false;
                       });
+                      _refreshPendingRequests();
                     },
                   ),
                 ],
@@ -574,7 +669,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             color: Colors.black.withOpacity(0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       padding: const EdgeInsets.all(16.0),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -34,6 +35,22 @@ class NotificationService {
     if (_isInitialized) return;
 
     tz.initializeTimeZones();
+    try {
+      final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+      String timeZoneName = timeZoneInfo.identifier;
+      if (timeZoneName == 'GMT') {
+        timeZoneName = 'UTC';
+      }
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+      debugPrint("[Notificaciones] Zona horaria configurada con éxito: $timeZoneName");
+    } catch (e) {
+      debugPrint("Could not set local timezone, falling back: $e");
+      try {
+        tz.setLocalLocation(tz.getLocation('America/Santiago'));
+      } catch (_) {
+        tz.setLocalLocation(tz.UTC);
+      }
+    }
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -172,37 +189,64 @@ class NotificationService {
     required String title,
     required String body,
     required DateTime scheduledDate,
+    bool isTest = false,
   }) async {
-    if (scheduledDate.isBefore(DateTime.now())) return;
+    try {
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'imprimilab_scheduled_channel',
+        'Recordatorios Únicos',
+        channelDescription: 'Recordatorios de entrega y finalización de proyectos',
+        importance: Importance.max,
+        priority: Priority.high,
+      );
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'imprimilab_scheduled_channel',
-      'Recordatorios Únicos',
-      channelDescription: 'Recordatorios de entrega y finalización de proyectos',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentSound: true,
+      );
 
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentSound: true,
-    );
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
 
-    const NotificationDetails details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
+      final tzNow = tz.TZDateTime.now(tz.local);
+      
+      // If it is a test alarm, schedule exactly 5 seconds in the future relative to the timezone's current clock.
+      // Otherwise, construct it using the wall-clock fields selected by the user.
+      final tzDate = isTest
+          ? tzNow.add(const Duration(seconds: 5))
+          : tz.TZDateTime(
+              tz.local,
+              scheduledDate.year,
+              scheduledDate.month,
+              scheduledDate.day,
+              scheduledDate.hour,
+              scheduledDate.minute,
+              scheduledDate.second,
+            );
 
-    final tzDate = tz.TZDateTime.from(scheduledDate, tz.local);
+      debugPrint("[Notificaciones] Zona Horaria Activa: ${tz.local.name}");
+      debugPrint("[Notificaciones] Hora local en zona: $tzNow");
+      debugPrint("[Notificaciones] Programando alarma para: $tzDate (isTest: $isTest)");
 
-    await _notificationsPlugin.zonedSchedule(
-      id: id,
-      title: title,
-      body: body,
-      scheduledDate: tzDate,
-      notificationDetails: details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
+      if (tzDate.isBefore(tzNow)) {
+        debugPrint("[Notificaciones] ERROR: La fecha programada $tzDate ya pasó respecto al tiempo local $tzNow. Cancelando registro.");
+        return;
+      }
+
+      await _notificationsPlugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tzDate,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+      debugPrint("[Notificaciones] Éxito: Alerta única programada con ID: $id para $tzDate");
+    } catch (e, stack) {
+      debugPrint("[Notificaciones] Fallo al programar alerta única (ID: $id): $e\n$stack");
+    }
   }
 
   // 3. Recurring Notification (Daily at specific time)
@@ -212,35 +256,43 @@ class NotificationService {
     required String body,
     required TimeOfDay time,
   }) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'imprimilab_recurring_channel',
-      'Recordatorios Recurrentes',
-      channelDescription: 'Alertas periódicas de control de inventario y estado',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
+    try {
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'imprimilab_recurring_channel',
+        'Recordatorios Recurrentes',
+        channelDescription: 'Alertas periódicas de control de inventario y estado',
+        importance: Importance.high,
+        priority: Priority.high,
+      );
 
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentSound: true,
-    );
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentSound: true,
+      );
 
-    const NotificationDetails details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
 
-    final scheduledDate = _nextInstanceOfTime(time);
+      final scheduledDate = _nextInstanceOfTime(time);
+      final tzNow = tz.TZDateTime.now(tz.local);
+      debugPrint("[Notificaciones] Programando recurrencia diaria");
+      debugPrint("[Notificaciones] Siguiente ejecución estimada: $scheduledDate (Zona: ${tz.local.name}, Hora Actual: $tzNow)");
 
-    await _notificationsPlugin.zonedSchedule(
-      id: id,
-      title: title,
-      body: body,
-      scheduledDate: scheduledDate,
-      notificationDetails: details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+      await _notificationsPlugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+      debugPrint("[Notificaciones] Éxito: Alerta recurrente programada con ID: $id");
+    } catch (e, stack) {
+      debugPrint("[Notificaciones] Fallo al programar alerta recurrente (ID: $id): $e\n$stack");
+    }
   }
 
   tz.TZDateTime _nextInstanceOfTime(TimeOfDay time) {
@@ -262,36 +314,46 @@ class NotificationService {
 
   // Update and reschedule all active notifications based on current settings
   Future<void> updateScheduledNotifications() async {
-    await saveSettings();
+    try {
+      await saveSettings();
 
-    // Cancel existing scheduled & recurring notifications
-    await _notificationsPlugin.cancel(id: uniqueScheduledNotificationId);
-    await _notificationsPlugin.cancel(id: recurringNotificationId);
+      // Cancel existing scheduled & recurring notifications
+      await _notificationsPlugin.cancel(id: uniqueScheduledNotificationId);
+      await _notificationsPlugin.cancel(id: recurringNotificationId);
 
-    if (isScheduledActive && scheduledTime != null) {
-      await scheduleUniqueNotification(
-        id: uniqueScheduledNotificationId,
-        title: scheduledTitle,
-        body: scheduledBody,
-        scheduledDate: scheduledTime!,
-      );
-    }
+      if (isScheduledActive && scheduledTime != null) {
+        await scheduleUniqueNotification(
+          id: uniqueScheduledNotificationId,
+          title: scheduledTitle,
+          body: scheduledBody,
+          scheduledDate: scheduledTime!,
+        );
+      }
 
-    if (isRecurringActive) {
-      await scheduleRecurringNotification(
-        id: recurringNotificationId,
-        title: recurringTitle,
-        body: recurringBody,
-        time: recurringTime,
-      );
+      if (isRecurringActive) {
+        await scheduleRecurringNotification(
+          id: recurringNotificationId,
+          title: recurringTitle,
+          body: recurringBody,
+          time: recurringTime,
+        );
+      }
+      debugPrint("Successfully updated scheduled notifications configuration.");
+    } catch (e) {
+      debugPrint("Error updating scheduled notifications configuration: $e");
     }
   }
 
   Future<void> cancelAll() async {
-    await _notificationsPlugin.cancelAll();
-    isScheduledActive = false;
-    isRecurringActive = false;
-    await saveSettings();
+    try {
+      await _notificationsPlugin.cancelAll();
+      isScheduledActive = false;
+      isRecurringActive = false;
+      await saveSettings();
+      debugPrint("Successfully cancelled all system notifications.");
+    } catch (e) {
+      debugPrint("Error cancelling all notifications: $e");
+    }
   }
 
   // Check currently pending requests

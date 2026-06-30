@@ -317,11 +317,14 @@ class PrinterListScreen extends StatelessWidget {
                     ),
                     title: Row(
                       children: [
-                        Text(
-                          printer.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                        Expanded(
+                          child: Text(
+                            printer.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (!printer.isEnabled) ...[
