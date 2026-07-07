@@ -107,7 +107,8 @@ lib/
 │   ├── print_bed.dart              # Entidad: cama de impresión con lista de piezas
 │   ├── printer.dart                # Entidad: impresora (FDM o Resina) con potencia y vida útil
 │   ├── project.dart                # Entidad raíz: proyecto comercial + lógica de cálculo de costos
-│   └── slicer_config.dart          # Entidad: perfil de laminación con parámetros por tecnología
+│   ├── slicer_config.dart          # Entidad: perfil de laminación con parámetros por tecnología
+│   └── user_profile.dart           # Entidad: perfil de usuario y taller del maker
 ├── screens/
 │   ├── splash_screen.dart          # Pantalla de carga animada (siempre se muestra al iniciar)
 │   ├── intro_slides_screen.dart    # 3 slides de presentación (solo primer uso)
@@ -117,7 +118,8 @@ lib/
 │   ├── project_detail_screen.dart  # Detalle, edición y exportación de proyectos
 │   ├── printer_list_screen.dart    # Gestión del inventario de impresoras
 │   ├── material_list_screen.dart   # Gestión del inventario de materiales
-│   └── notification_settings_screen.dart  # Configuración de recordatorios y alertas
+│   ├── notification_settings_screen.dart  # Configuración de recordatorios y alertas
+│   └── profile_screen.dart         # Pantalla de registro, login y edición de perfil maker
 ├── services/
 │   ├── database_service.dart       # CRUD SQLite para impresoras, materiales y proyectos
 │   ├── localization_service.dart   # Traducción de claves y formato de divisas
@@ -135,7 +137,8 @@ test/
 ├── app_state_test.dart             # Tests de lógica de estado (deducción/reembolso de stock)
 ├── calculations_test.dart          # Tests de precisión matemática del motor de costos
 ├── localization_service_test.dart  # Tests de traducciones y formato de divisas
-└── models_serialization_test.dart  # Tests de serialización/deserialización JSON de entidades
+├── models_serialization_test.dart  # Tests de serialización/deserialización JSON de entidades
+└── profile_test.dart               # Tests de registro, inicio de sesión y persistencia maker
 ```
 
 ---

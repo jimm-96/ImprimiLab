@@ -294,20 +294,21 @@ class PrinterListScreen extends StatelessWidget {
             itemCount: appState.printers.length,
             itemBuilder: (context, index) {
               final printer = appState.printers[index];
-              return Opacity(
+               final isDark = Theme.of(context).brightness == Brightness.dark;
+               return Opacity(
                 opacity: printer.isEnabled ? 1.0 : 0.5,
                 child: Card(
                   margin: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).cardColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
                       color: printer.isEnabled
-                          ? Colors.white10
-                          : Colors.redAccent.withOpacity(0.3),
+                          ? (isDark ? Colors.white10 : Colors.black12)
+                          : Colors.redAccent.withValues(alpha: 0.3),
                     ),
                   ),
                   child: ListTile(
@@ -321,9 +322,10 @@ class PrinterListScreen extends StatelessWidget {
                         Expanded(
                           child: Text(
                             printer.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -343,6 +345,9 @@ class PrinterListScreen extends StatelessWidget {
                     ),
                     subtitle: Text(
                       '${printer.isResin ? "Resina" : "FDM"} - ${printer.powerW}W - ${appState.format(printer.cost)}\nVida útil: ${printer.lifespanH.round()} hrs',
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black54,
+                      ),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,

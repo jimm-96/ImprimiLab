@@ -178,11 +178,6 @@ class _LogoPlaceholder extends StatelessWidget {
           height: 110,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0D2137), Color(0xFF112233)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
             border: Border.all(
               color: const Color(0xFF00E5FF).withAlpha(77),
               width: 1.5,
@@ -195,10 +190,13 @@ class _LogoPlaceholder extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(
-            Icons.print_rounded,
-            size: 52,
-            color: Color(0xFF00E5FF),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/Logo_ImpriLab.png',
+              width: 110,
+              height: 110,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
       ],

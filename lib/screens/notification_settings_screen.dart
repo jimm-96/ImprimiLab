@@ -612,11 +612,11 @@ class _NotificationSettingsScreenState
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withAlpha(51),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -640,7 +640,13 @@ class _NotificationSettingsScreenState
               ),
             ],
           ),
-          const Divider(color: Colors.white24, height: 24, thickness: 1),
+          Divider(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white24
+                : Colors.black12,
+            height: 24,
+            thickness: 1,
+          ),
           child,
         ],
       ),

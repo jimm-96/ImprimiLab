@@ -595,9 +595,13 @@ class MaterialListScreen extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: Colors.white10),
+            side: BorderSide(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white10
+                  : Colors.black12,
+            ),
           ),
-          color: const Color(0xFF1E293B),
+          color: Theme.of(context).cardColor,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -622,10 +626,12 @@ class MaterialListScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   material.name,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.white
+                                        : const Color(0xFF0F172A),
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -717,7 +723,9 @@ class MaterialListScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: ratio.clamp(0.0, 1.0),
-                    backgroundColor: Colors.white10,
+                    backgroundColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white10
+                        : Colors.black12,
                     valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                     minHeight: 8,
                   ),
@@ -743,7 +751,9 @@ class MaterialListScreen extends StatelessWidget {
           bottom: TabBar(
             indicatorColor: Theme.of(context).colorScheme.primary,
             labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: Colors.white60,
+            unselectedLabelColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white60
+                : Colors.black54,
             tabs: [
               Tab(
                 text: appState.translate('filaments'),

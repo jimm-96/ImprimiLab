@@ -221,11 +221,6 @@ class _Slide1 extends StatelessWidget {
               height: 90,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF003D52), Color(0xFF001F2E)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
                 border: Border.all(
                   color: const Color(0xFF00E5FF).withAlpha(77),
                   width: 1.5,
@@ -238,10 +233,13 @@ class _Slide1 extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.print_rounded,
-                size: 44,
-                color: Color(0xFF00E5FF),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/Logo_ImpriLab.png',
+                  width: 90,
+                  height: 90,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
