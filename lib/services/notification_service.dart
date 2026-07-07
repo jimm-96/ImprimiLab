@@ -37,48 +37,52 @@ class NotificationService {
   Future<void> init() async {
     if (_isInitialized) return;
 
-    tz.initializeTimeZones();
     try {
-      final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
-      String timeZoneName = timeZoneInfo.identifier;
-      if (timeZoneName == 'GMT') {
-        timeZoneName = 'UTC';
-      }
-      tz.setLocalLocation(tz.getLocation(timeZoneName));
-      debugPrint("[Notificaciones] Zona horaria configurada con éxito: $timeZoneName");
-    } catch (e) {
-      debugPrint("Could not set local timezone, falling back: $e");
+      tz.initializeTimeZones();
       try {
-        tz.setLocalLocation(tz.getLocation('America/Santiago'));
-      } catch (_) {
-        tz.setLocalLocation(tz.UTC);
+        final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+        String timeZoneName = timeZoneInfo.identifier;
+        if (timeZoneName == 'GMT') {
+          timeZoneName = 'UTC';
+        }
+        tz.setLocalLocation(tz.getLocation(timeZoneName));
+        debugPrint("[Notificaciones] Zona horaria configurada con éxito: $timeZoneName");
+      } catch (e) {
+        debugPrint("Could not set local timezone, falling back: $e");
+        try {
+          tz.setLocalLocation(tz.getLocation('America/Santiago'));
+        } catch (_) {
+          tz.setLocalLocation(tz.UTC);
+        }
       }
+
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+
+      const DarwinInitializationSettings initializationSettingsDarwin =
+          DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      );
+
+      const InitializationSettings initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsDarwin,
+      );
+
+      await _notificationsPlugin.initialize(
+        settings: initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          debugPrint("Notification tapped: ${response.payload}");
+        },
+      );
+
+      await loadSettings();
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint("Error al inicializar notificaciones locales: $e");
     }
-
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    const DarwinInitializationSettings initializationSettingsDarwin =
-        DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-    );
-
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsDarwin,
-    );
-
-    await _notificationsPlugin.initialize(
-      settings: initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        debugPrint("Notification tapped: ${response.payload}");
-      },
-    );
-
-    await loadSettings();
-    _isInitialized = true;
   }
 
   Future<bool> checkPermission() async {

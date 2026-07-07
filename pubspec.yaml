@@ -37,6 +37,6 @@ flutter:
     - assets/Logo_ImpriLab.png
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
   image_path: "assets/Logo_ImpriLab.png"

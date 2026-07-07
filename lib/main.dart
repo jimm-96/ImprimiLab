@@ -6,9 +6,25 @@ import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await appState.init();
-  await themeState.init();
-  await NotificationService.instance.init();
+  
+  try {
+    await appState.init();
+  } catch (e) {
+    debugPrint("Error al inicializar appState: $e");
+  }
+
+  try {
+    await themeState.init();
+  } catch (e) {
+    debugPrint("Error al inicializar themeState: $e");
+  }
+
+  try {
+    await NotificationService.instance.init();
+  } catch (e) {
+    debugPrint("Error al inicializar NotificationService: $e");
+  }
+
   runApp(const ImpriLabApp());
 }
 
