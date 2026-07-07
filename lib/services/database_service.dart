@@ -8,6 +8,7 @@ import '../models/printer.dart';
 import '../models/material3d.dart';
 import '../models/project.dart';
 import '../models/print_bed.dart';
+import '../models/user_profile.dart';
 
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
@@ -37,12 +38,13 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: (db, oldVersion, newVersion) async {
         await db.execute('DROP TABLE IF EXISTS printers');
         await db.execute('DROP TABLE IF EXISTS materials');
         await db.execute('DROP TABLE IF EXISTS projects');
+        await db.execute('DROP TABLE IF EXISTS profiles');
         await _createDB(db, newVersion);
       },
     );
@@ -101,6 +103,21 @@ class DatabaseService {
         collectionName TEXT NOT NULL,
         additionalCosts TEXT NOT NULL,
         printBeds TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE profiles (
+        id TEXT PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        passwordHash TEXT NOT NULL,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT,
+        workshopName TEXT,
+        bio TEXT,
+        website TEXT,
+        makerLevel TEXT
       )
     ''');
   }
@@ -342,6 +359,49 @@ class DatabaseService {
       'projects',
       where: 'id = ?',
       whereArgs: [id],
+    );
+  }
+
+  // --- Profile CRUD Operations ---
+
+  Future<int> insertProfile(UserProfile profile) async {
+    final db = await database;
+    return await db.insert(
+      'profiles',
+      profile.toJson(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<UserProfile?> getProfileByUsername(String username) async {
+    final db = await database;
+    final maps = await db.query(
+      'profiles',
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+    if (maps.isEmpty) return null;
+    return UserProfile.fromJson(maps.first);
+  }
+
+  Future<UserProfile?> getProfileById(String id) async {
+    final db = await database;
+    final maps = await db.query(
+      'profiles',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (maps.isEmpty) return null;
+    return UserProfile.fromJson(maps.first);
+  }
+
+  Future<int> updateProfile(UserProfile profile) async {
+    final db = await database;
+    return await db.update(
+      'profiles',
+      profile.toJson(),
+      where: 'id = ?',
+      whereArgs: [profile.id],
     );
   }
 }

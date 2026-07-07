@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'screens/dashboard_screen.dart';
-import 'screens/onboarding_screen.dart';
+import 'screens/splash_screen.dart';
 import 'state/app_state.dart';
+import 'state/theme_state.dart';
 import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await appState.init();
+  await themeState.init();
   await NotificationService.instance.init();
   runApp(const ImpriLabApp());
 }
@@ -16,24 +17,18 @@ class ImpriLabApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ImpriLab',
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
-        primaryColor: Colors.cyanAccent,
-        colorScheme: const ColorScheme.dark(
-          primary: Colors.cyanAccent,
-          secondary: Colors.orangeAccent,
-          surface: Color(0xFF1E293B),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0F172A),
-          elevation: 0,
-        ),
-      ),
-      home: appState.setupCompleted
-          ? const DashboardScreen()
-          : const OnboardingScreen(),
+    return ListenableBuilder(
+      listenable: themeState,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'ImpriLab',
+          debugShowCheckedModeBanner: false,
+          theme: themeState.lightTheme,
+          darkTheme: themeState.darkTheme,
+          themeMode: themeState.themeMode,
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }

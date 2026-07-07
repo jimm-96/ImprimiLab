@@ -186,12 +186,12 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
           child: Wrap(
             children: [
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Colors.cyanAccent),
+                leading: Icon(Icons.photo_library, color: Theme.of(context).colorScheme.primary),
                 title: const Text('Galería de Imágenes', style: TextStyle(color: Colors.white)),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt, color: Colors.cyanAccent),
+                leading: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.primary),
                 title: const Text('Tomar Foto con Cámara', style: TextStyle(color: Colors.white)),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
@@ -332,10 +332,10 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
               // Sección 1: Información General
               Text(
                 appState.translate('general_info'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.cyanAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -479,7 +479,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                       style: const TextStyle(color: Colors.black),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.cyanAccent,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       padding: const EdgeInsets.symmetric(
                         vertical: 20,
                         horizontal: 15,
@@ -560,9 +560,9 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                   _status != 'cancelado') ...[
                 Text(
                   appState.translate('priority'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
-                    color: Colors.cyanAccent,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 Row(
@@ -619,7 +619,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
 
               Text(
                 'Servicios de Post-Procesado Rápido:',
-                style: const TextStyle(fontSize: 15, color: Colors.cyanAccent),
+                style: TextStyle(fontSize: 15, color: Theme.of(context).colorScheme.primary),
               ),
               CheckboxListTile(
                 title: Text(appState.translate('sanding_supports')),
@@ -648,7 +648,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     appState.translate('delivery_date'),
-                    style: const TextStyle(color: Colors.cyanAccent),
+                    style: TextStyle(color: Theme.of(context).colorScheme.primary),
                   ),
                   subtitle: Text(
                     _tempDeliveryDate == null && _tempDeliveryTime == null
@@ -688,10 +688,10 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
               const SizedBox(height: 10),
               Text(
                 '2. Camas de Impresión',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.cyanAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 10),
@@ -721,9 +721,9 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.edit,
-                            color: Colors.cyanAccent,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           onPressed: () => _showPrintBedModal(context, idx),
                         ),
@@ -760,10 +760,10 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
               const SizedBox(height: 10),
               Text(
                 appState.translate('labor_section'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.cyanAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -840,10 +840,10 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
               const SizedBox(height: 10),
               Text(
                 appState.translate('extras_section'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.cyanAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 10),
@@ -925,7 +925,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                     },
                     icon: const Icon(Icons.add),
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.cyanAccent,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.black,
                     ),
                   ),
@@ -937,10 +937,10 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
               const SizedBox(height: 10),
               Text(
                 appState.translate('quote_section'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.cyanAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 15),
@@ -950,7 +950,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                   Text(appState.translate('vat_toggle')),
                   Switch(
                     value: _includeIva,
-                    activeColor: Colors.cyanAccent,
+                    activeColor: Theme.of(context).colorScheme.primary,
                     onChanged: (val) {
                       setState(() => _includeIva = val);
                       _saveDraft();
@@ -991,7 +991,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                 decoration: BoxDecoration(
                   color: Colors.black38,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.cyanAccent.withOpacity(0.5)),
+                  border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
                 ),
                 child: Column(
                   children: [
@@ -1023,16 +1023,16 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                       ),
                       _buildCostRow(appState.translate('vat_amount'), ivaCost),
                     ],
-                    const Divider(color: Colors.cyanAccent),
+                    Divider(color: Theme.of(context).colorScheme.primary),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           appState.translate('final_price'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: Colors.cyanAccent,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                         Text(
@@ -1053,7 +1053,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                 onPressed: _saveProject,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
-                  backgroundColor: Colors.cyanAccent,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

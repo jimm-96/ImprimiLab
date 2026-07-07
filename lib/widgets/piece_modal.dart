@@ -189,9 +189,9 @@ class _PieceModalState extends State<PieceModal> {
               widget.piece == null
                   ? 'Añadir Objeto a la Cama'
                   : 'Editar Objeto en la Cama',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
-                color: Colors.cyanAccent,
+                color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -256,7 +256,7 @@ class _PieceModalState extends State<PieceModal> {
             const Divider(),
             Text(
               appState.translate('add_piece_modal'),
-              style: const TextStyle(color: Colors.cyanAccent),
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
             ),
             TextField(
               controller: profileNameCtrl,

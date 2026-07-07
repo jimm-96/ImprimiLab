@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/material3d.dart';
 import '../state/app_state.dart';
+import '../state/theme_state.dart';
 
 class MaterialListScreen extends StatelessWidget {
   const MaterialListScreen({super.key});
@@ -40,9 +41,9 @@ class MaterialListScreen extends StatelessWidget {
                       material == null
                           ? appState.translate('new_material')
                           : appState.translate('edit_material'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
-                        color: Colors.cyanAccent,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 15),
@@ -110,9 +111,9 @@ class MaterialListScreen extends StatelessWidget {
                                   setStateModal(() => tempPurchaseDate = null),
                             ),
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.calendar_today,
-                              color: Colors.cyanAccent,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                             onPressed: () async {
                               final date = await showDatePicker(
@@ -150,9 +151,9 @@ class MaterialListScreen extends StatelessWidget {
                                   setStateModal(() => tempOpenDate = null),
                             ),
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.calendar_today,
-                              color: Colors.cyanAccent,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                             onPressed: () async {
                               final date = await showDatePicker(
@@ -275,7 +276,7 @@ class MaterialListScreen extends StatelessWidget {
               backgroundColor: const Color(0xFF1E293B),
               title: Text(
                 appState.translate('refill_material'),
-                style: const TextStyle(color: Colors.cyanAccent),
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -445,9 +446,9 @@ class MaterialListScreen extends StatelessWidget {
           builder: (ctx, setStateDialog) {
             return AlertDialog(
               backgroundColor: const Color(0xFF1E293B),
-              title: const Text(
+              title: Text(
                 'Calibración y Purga de Filamento',
-                style: TextStyle(color: Colors.cyanAccent),
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -645,18 +646,18 @@ class MaterialListScreen extends StatelessWidget {
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.edit,
-                            color: Colors.cyanAccent,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           tooltip: 'Editar Material',
                           onPressed: () =>
                               _showMaterialModal(context, material: material),
                         ),
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.replay,
-                            color: Colors.cyanAccent,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           tooltip: 'Recargar Bobina/Tina',
                           onPressed: () => _showRefillDialog(context, material),
@@ -737,11 +738,11 @@ class MaterialListScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text(
             appState.translate('materials'),
-            style: const TextStyle(color: Colors.cyanAccent),
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
           ),
           bottom: TabBar(
-            indicatorColor: Colors.cyanAccent,
-            labelColor: Colors.cyanAccent,
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelColor: Theme.of(context).colorScheme.primary,
             unselectedLabelColor: Colors.white60,
             tabs: [
               Tab(
@@ -756,7 +757,7 @@ class MaterialListScreen extends StatelessWidget {
           ),
         ),
         body: ListenableBuilder(
-          listenable: appState,
+          listenable: Listenable.merge([appState, themeState]),
           builder: (context, child) {
             final filaments = appState.materials
                 .where((m) => !m.isResin)
@@ -781,7 +782,7 @@ class MaterialListScreen extends StatelessWidget {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showMaterialModal(context),
-          backgroundColor: Colors.cyanAccent,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           child: const Icon(Icons.add, color: Colors.black),
         ),
       ),

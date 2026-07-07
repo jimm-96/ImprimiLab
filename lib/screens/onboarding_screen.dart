@@ -17,7 +17,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _selectedCurrency = 'CLP';
   final _taxCtrl = TextEditingController(text: '19');
   final _customCurrencyCtrl = TextEditingController();
-  final _kwhCtrl = TextEditingController(text: '150');
+  final _kwhCtrl = TextEditingController(text: '236');
 
   void _onCountryChanged(String? countryKey) {
     if (countryKey == null) return;
@@ -28,7 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _selectedLanguage = 'es';
           _selectedCurrency = 'CLP';
           _taxCtrl.text = '19';
-          _kwhCtrl.text = '150';
+          _kwhCtrl.text = '236';
           break;
         case 'argentina':
           _selectedLanguage = 'es';
@@ -126,19 +126,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Icono decorativo premium
-                const Icon(
+                Icon(
                   Icons.language_outlined,
                   size: 80,
-                  color: Colors.cyanAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   '¡Bienvenido a ImpriLab!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.cyanAccent,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -166,10 +166,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // País
-                        const Text(
+                        Text(
                           'Selecciona tu País',
                           style: TextStyle(
-                            color: Colors.cyanAccent,
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -214,10 +214,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         const SizedBox(height: 16),
 
                         // Idioma
-                        const Text(
+                        Text(
                           'Idioma de la Aplicación',
                           style: TextStyle(
-                            color: Colors.cyanAccent,
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -250,10 +250,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         const SizedBox(height: 16),
 
                         // Divisa
-                        const Text(
+                        Text(
                           'Divisa / Moneda de Trabajo',
                           style: TextStyle(
-                            color: Colors.cyanAccent,
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -323,10 +323,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         const SizedBox(height: 16),
 
                         // Impuesto por defecto
-                        const Text(
+                        Text(
                           'IVA / Impuesto por Defecto (%)',
                           style: TextStyle(
-                            color: Colors.cyanAccent,
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -353,10 +353,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         const SizedBox(height: 16),
 
                         // Costo Eléctrico por kWh
-                        const Text(
+                        Text(
                           'Costo de Electricidad por kWh',
                           style: TextStyle(
-                            color: Colors.cyanAccent,
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -389,7 +389,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ElevatedButton(
                   onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyanAccent,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(

@@ -144,9 +144,9 @@ class _PrintBedModalState extends State<PrintBedModal> {
               widget.printBed == null
                   ? 'Agregar Cama de Impresión'
                   : 'Editar Cama de Impresión',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
-                color: Colors.cyanAccent,
+                color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -231,11 +231,11 @@ class _PrintBedModalState extends State<PrintBedModal> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Objetos / Piezas en esta Cama:',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.cyanAccent,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 TextButton.icon(
@@ -276,10 +276,10 @@ class _PrintBedModalState extends State<PrintBedModal> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.edit,
                           size: 16,
-                          color: Colors.cyanAccent,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),

@@ -4,8 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/printer.dart';
 import '../models/material3d.dart';
 import '../models/project.dart';
+import '../models/user_profile.dart';
 import '../services/localization_service.dart';
 import '../services/database_service.dart';
+import '../services/notification_service.dart';
 
 class AppState extends ChangeNotifier {
   double electricityPriceKwh = 150.0; // Precio por defecto del kWh
@@ -13,9 +15,11 @@ class AppState extends ChangeNotifier {
   List<Printer> printers = [];
   List<Material3D> materials = [];
   List<Project> projects = [];
+  UserProfile? currentUser;
 
   // Ajustes globales de internacionalización
   bool setupCompleted = false;
+  bool tutorialCompleted = false;
   String country = "Chile";
   String language = "es";
   String currency = "CLP";
@@ -76,6 +80,7 @@ class AppState extends ChangeNotifier {
 
       // Cargar ajustes globales
       setupCompleted = prefs.getBool('setupCompleted') ?? false;
+      tutorialCompleted = prefs.getBool('tutorialCompleted') ?? false;
       country = prefs.getString('country') ?? "Chile";
       language = prefs.getString('language') ?? "es";
       currency = prefs.getString('currency') ?? "CLP";
@@ -87,6 +92,11 @@ class AppState extends ChangeNotifier {
           (currency == 'CLP' ? 150.0 : (currency == 'MXN' ? 2.5 : 0.15));
 
       final db = DatabaseService.instance;
+      final loggedInUserId = prefs.getString('logged_in_user_id');
+      if (loggedInUserId != null) {
+        currentUser = await db.getProfileById(loggedInUserId);
+      }
+
       final dbPrinters = await db.getPrinters();
       final dbMaterials = await db.getMaterials();
       final dbProjects = await db.getProjects();
@@ -153,6 +163,7 @@ class AppState extends ChangeNotifier {
 
       // Guardar ajustes globales solamente en SharedPreferences
       await prefs.setBool('setupCompleted', setupCompleted);
+      await prefs.setBool('tutorialCompleted', tutorialCompleted);
       await prefs.setString('country', country);
       await prefs.setString('language', language);
       await prefs.setString('currency', currency);
@@ -195,6 +206,18 @@ class AppState extends ChangeNotifier {
   void updateCalibrationWeight(double weight) {
     defaultCalibrationWeight = weight;
     saveState();
+    notifyListeners();
+  }
+
+  Future<void> markTutorialCompleted() async {
+    tutorialCompleted = true;
+    await saveState();
+    notifyListeners();
+  }
+
+  Future<void> resetTutorial() async {
+    tutorialCompleted = false;
+    await saveState();
     notifyListeners();
   }
 
@@ -263,6 +286,17 @@ class AppState extends ChangeNotifier {
       } catch (e) {
         debugPrint("Error al actualizar material en DB: $e");
       }
+
+      // Alerta de stock bajo
+      if (NotificationService.instance.isLowMaterialActive &&
+          material.remainingQuantity <= NotificationService.instance.lowMaterialThreshold) {
+        final unit = material.isResin ? 'ml' : 'g';
+        NotificationService.instance.showInstantNotification(
+          id: material.id.hashCode,
+          title: '⚠️ ¡Material Bajo en Stock!',
+          body: 'Queda poco del material: ${material.name} (${material.color}). Stock restante: ${material.remainingQuantity.round()}$unit.',
+        );
+      }
     }
   }
 
@@ -275,6 +309,18 @@ class AppState extends ChangeNotifier {
         await DatabaseService.instance.updateMaterial(materials[idx]);
       } catch (e) {
         debugPrint("Error al actualizar stock de material en DB: $e");
+      }
+
+      // Alerta de stock bajo
+      final material = materials[idx];
+      if (NotificationService.instance.isLowMaterialActive &&
+          newRemaining <= NotificationService.instance.lowMaterialThreshold) {
+        final unit = material.isResin ? 'ml' : 'g';
+        NotificationService.instance.showInstantNotification(
+          id: id.hashCode,
+          title: '⚠️ ¡Material Bajo en Stock!',
+          body: 'Queda poco del material: ${material.name} (${material.color}). Stock restante: ${newRemaining.round()}$unit.',
+        );
       }
     }
   }
@@ -379,6 +425,18 @@ class AppState extends ChangeNotifier {
         if (materials[materialIdx].remainingQuantity < 0) {
           materials[materialIdx].remainingQuantity = 0;
         }
+
+        // Alerta de stock bajo
+        final material = materials[materialIdx];
+        if (NotificationService.instance.isLowMaterialActive &&
+            material.remainingQuantity <= NotificationService.instance.lowMaterialThreshold) {
+          final unit = material.isResin ? 'ml' : 'g';
+          NotificationService.instance.showInstantNotification(
+            id: material.id.hashCode,
+            title: '⚠️ ¡Material Bajo en Stock!',
+            body: 'Queda poco del material: ${material.name} (${material.color}). Stock restante: ${material.remainingQuantity.round()}$unit.',
+          );
+        }
       }
     }
   }
@@ -398,6 +456,59 @@ class AppState extends ChangeNotifier {
         }
       }
     }
+  }
+
+  // --- Session & User Profile Operations ---
+
+  Future<bool> registerUser(String username, String password, String name, String email) async {
+    final existing = await DatabaseService.instance.getProfileByUsername(username);
+    if (existing != null) {
+      return false; // username already taken
+    }
+
+    final String passwordHash = _hashPassword(password);
+    final newUser = UserProfile(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      username: username,
+      passwordHash: passwordHash,
+      name: name,
+      email: email,
+    );
+
+    await DatabaseService.instance.insertProfile(newUser);
+    return true;
+  }
+
+  Future<bool> loginUser(String username, String password) async {
+    final profile = await DatabaseService.instance.getProfileByUsername(username);
+    if (profile == null) return false;
+
+    if (profile.passwordHash != _hashPassword(password)) {
+      return false; // invalid password
+    }
+
+    currentUser = profile;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('logged_in_user_id', profile.id);
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> updateUserProfile(UserProfile updated) async {
+    currentUser = updated;
+    await DatabaseService.instance.updateProfile(updated);
+    notifyListeners();
+  }
+
+  Future<void> logoutUser() async {
+    currentUser = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('logged_in_user_id');
+    notifyListeners();
+  }
+
+  String _hashPassword(String password) {
+    return base64.encode(utf8.encode(password));
   }
 }
 

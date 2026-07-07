@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/printer.dart';
 import '../state/app_state.dart';
+import '../state/theme_state.dart';
 
 class PrinterListScreen extends StatelessWidget {
   const PrinterListScreen({super.key});
@@ -41,9 +42,9 @@ class PrinterListScreen extends StatelessWidget {
                       printer == null
                           ? appState.translate('new_printer')
                           : appState.translate('edit_printer'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
-                        color: Colors.cyanAccent,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 15),
@@ -111,9 +112,9 @@ class PrinterListScreen extends StatelessWidget {
                                   setStateModal(() => tempPurchaseDate = null),
                             ),
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.calendar_today,
-                              color: Colors.cyanAccent,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                             onPressed: () async {
                               final date = await showDatePicker(
@@ -280,11 +281,11 @@ class PrinterListScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           appState.translate('printers'),
-          style: const TextStyle(color: Colors.cyanAccent),
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
         ),
       ),
       body: ListenableBuilder(
-        listenable: appState,
+        listenable: Listenable.merge([appState, themeState]),
         builder: (context, child) {
           if (appState.printers.isEmpty) {
             return Center(child: Text(appState.translate('no_printers')));
@@ -312,7 +313,7 @@ class PrinterListScreen extends StatelessWidget {
                   child: ListTile(
                     leading: Icon(
                       printer.isResin ? Icons.water_drop : Icons.print,
-                      color: Colors.cyanAccent,
+                      color: Theme.of(context).colorScheme.primary,
                       size: 28,
                     ),
                     title: Row(
@@ -347,9 +348,9 @@ class PrinterListScreen extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.edit,
-                            color: Colors.cyanAccent,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           onPressed: () =>
                               _showPrinterModal(context, printer: printer),
@@ -406,7 +407,7 @@ class PrinterListScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showPrinterModal(context),
-        backgroundColor: Colors.cyanAccent,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add, color: Colors.black),
       ),
     );

@@ -29,9 +29,9 @@ class _NotificationSettingsScreenState
   late TextEditingController _recurringBodyCtrl;
   late TimeOfDay _recurringTime;
 
-  // Test countdown state
-  int _testCountdown = 0;
-  Timer? _countdownTimer;
+  // Controllers for low material alert
+  late bool _isLowMaterialActive;
+  late TextEditingController _lowMaterialThresholdCtrl;
 
   // Future for pending notifications
   late Future<List<PendingNotificationRequest>> _pendingRequestsFuture;
@@ -52,6 +52,11 @@ class _NotificationSettingsScreenState
     _recurringBodyCtrl = TextEditingController(text: _service.recurringBody);
     _recurringTime = _service.recurringTime;
 
+    _isLowMaterialActive = _service.isLowMaterialActive;
+    _lowMaterialThresholdCtrl = TextEditingController(
+      text: _service.lowMaterialThreshold.round().toString(),
+    );
+
     // Initialize the pending requests future
     _pendingRequestsFuture = _service.getPendingRequests();
   }
@@ -66,11 +71,11 @@ class _NotificationSettingsScreenState
 
   @override
   void dispose() {
-    _countdownTimer?.cancel();
     _scheduledTitleCtrl.dispose();
     _scheduledBodyCtrl.dispose();
     _recurringTitleCtrl.dispose();
     _recurringBodyCtrl.dispose();
+    _lowMaterialThresholdCtrl.dispose();
     super.dispose();
   }
 
@@ -110,10 +115,10 @@ class _NotificationSettingsScreenState
       builder: (context, child) {
         return Theme(
           data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Colors.cyanAccent,
+            colorScheme: ColorScheme.dark(
+              primary: Theme.of(context).colorScheme.primary,
               onPrimary: Colors.black,
-              surface: Color(0xFF1E293B),
+              surface: const Color(0xFF1E293B),
               onSurface: Colors.white,
             ),
             dialogBackgroundColor: const Color(0xFF0F172A),
@@ -133,10 +138,10 @@ class _NotificationSettingsScreenState
         builder: (context, child) {
           return Theme(
             data: ThemeData.dark().copyWith(
-              colorScheme: const ColorScheme.dark(
-                primary: Colors.cyanAccent,
+              colorScheme: ColorScheme.dark(
+                primary: Theme.of(context).colorScheme.primary,
                 onPrimary: Colors.black,
-                surface: Color(0xFF1E293B),
+                surface: const Color(0xFF1E293B),
                 onSurface: Colors.white,
               ),
               dialogBackgroundColor: const Color(0xFF0F172A),
@@ -167,10 +172,10 @@ class _NotificationSettingsScreenState
       builder: (context, child) {
         return Theme(
           data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Colors.cyanAccent,
+            colorScheme: ColorScheme.dark(
+              primary: Theme.of(context).colorScheme.primary,
               onPrimary: Colors.black,
-              surface: Color(0xFF1E293B),
+              surface: const Color(0xFF1E293B),
               onSurface: Colors.white,
             ),
             dialogBackgroundColor: const Color(0xFF0F172A),
@@ -199,6 +204,12 @@ class _NotificationSettingsScreenState
     _service.recurringBody = _recurringBodyCtrl.text.trim();
     _service.recurringTime = _recurringTime;
 
+    _service.isLowMaterialActive = _isLowMaterialActive;
+    _service.lowMaterialThreshold = double.tryParse(
+          _lowMaterialThresholdCtrl.text.replaceAll(',', '.'),
+        ) ??
+        100.0;
+
     await _service.updateScheduledNotifications();
 
     if (mounted) {
@@ -221,15 +232,15 @@ class _NotificationSettingsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Ajustes de Notificaciones',
           style: TextStyle(
-            color: Colors.cyanAccent,
+            color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.cyanAccent),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.primary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -298,7 +309,7 @@ class _NotificationSettingsScreenState
                       'Ideal para avisar del fin de una impresión o entrega.',
                     ),
                     value: _isScheduledActive,
-                    activeColor: Colors.cyanAccent,
+                    activeColor: Theme.of(context).colorScheme.primary,
                     onChanged: (val) {
                       setState(() {
                         _isScheduledActive = val;
@@ -326,11 +337,11 @@ class _NotificationSettingsScreenState
                     const SizedBox(height: 12),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text(
+                      title: Text(
                         'Fecha y Hora Programada:',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.cyanAccent,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       subtitle: Text(
@@ -338,9 +349,9 @@ class _NotificationSettingsScreenState
                         style: const TextStyle(fontSize: 15),
                       ),
                       trailing: IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.edit_calendar,
-                          color: Colors.cyanAccent,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         onPressed: _selectDateTime,
                       ),
@@ -365,7 +376,7 @@ class _NotificationSettingsScreenState
                       'Ideal para recordar control de stock o mantenimiento diario.',
                     ),
                     value: _isRecurringActive,
-                    activeColor: Colors.cyanAccent,
+                    activeColor: Theme.of(context).colorScheme.primary,
                     onChanged: (val) {
                       setState(() {
                         _isRecurringActive = val;
@@ -393,11 +404,11 @@ class _NotificationSettingsScreenState
                     const SizedBox(height: 12),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text(
+                      title: Text(
                         'Hora de Alerta Diaria:',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.cyanAccent,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       subtitle: Text(
@@ -405,9 +416,9 @@ class _NotificationSettingsScreenState
                         style: const TextStyle(fontSize: 15),
                       ),
                       trailing: IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.access_time,
-                          color: Colors.cyanAccent,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         onPressed: _selectRecurringTime,
                       ),
@@ -418,100 +429,39 @@ class _NotificationSettingsScreenState
             ),
             const SizedBox(height: 16),
 
-            // Manual / Testing Card
+            // Low Stock Material Notification Card
             _buildCard(
-              title: 'Pruebas de Notificaciones',
-              icon: Icons.bug_report,
+              title: 'Alerta de Stock Bajo de Material',
+              icon: Icons.inventory_2_outlined,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.cyanAccent,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          icon: const Icon(Icons.notifications_active),
-                          label: const Text('Prueba Inmediata'),
-                          onPressed: () async {
-                            await _service.showInstantNotification(
-                              id: NotificationService.testNotificationId,
-                              title: '🔔 ¡Prueba Instantánea Exitosa!',
-                              body:
-                                  'Esta notificación demuestra que las notificaciones de ImprimiLab funcionan correctamente en este dispositivo.',
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _testCountdown > 0 ? Colors.grey : Colors.orangeAccent,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          icon: Icon(_testCountdown > 0 ? Icons.hourglass_bottom : Icons.timer),
-                          label: Text(_testCountdown > 0 ? 'Espera (${_testCountdown}s)' : 'Prueba en 5 Seg'),
-                          onPressed: _testCountdown > 0 ? null : () async {
-                            final scheduledTime = DateTime.now().add(
-                              const Duration(seconds: 5),
-                            );
-                            await _service.scheduleUniqueNotification(
-                              id: NotificationService
-                                  .testScheduledNotificationId,
-                              title: '⏰ Recordatorio de Prueba',
-                              body:
-                                  'Este recordatorio de 5 segundos funciona de forma idéntica a tus recordatorios a largo plazo.',
-                              scheduledDate: scheduledTime,
-                              isTest: true,
-                            );
-
-                            setState(() {
-                              _testCountdown = 5;
-                            });
-
-                            _countdownTimer?.cancel();
-                            _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-                              if (mounted) {
-                                setState(() {
-                                  if (_testCountdown > 0) {
-                                    _testCountdown--;
-                                  } else {
-                                    timer.cancel();
-                                    _refreshPendingRequests();
-                                  }
-                                });
-                              } else {
-                                timer.cancel();
-                              }
-                            });
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Notificación de prueba programada para dentro de 5 segundos. Cierra o sal de la app.',
-                                ),
-                                duration: Duration(seconds: 4),
-                              ),
-                            );
-
-                            // Refresh list to show pending
-                            Future.delayed(
-                              const Duration(milliseconds: 500),
-                              () {
-                                _refreshPendingRequests();
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Notificar cuando quede poco material'),
+                    subtitle: const Text(
+                      'Te avisará de inmediato si el nivel de resina o filamento cae por debajo del valor límite.',
+                    ),
+                    value: _isLowMaterialActive,
+                    activeColor: Theme.of(context).colorScheme.primary,
+                    onChanged: (val) {
+                      setState(() {
+                        _isLowMaterialActive = val;
+                      });
+                    },
                   ),
+                  if (_isLowMaterialActive) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _lowMaterialThresholdCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Cantidad límite para notificar (g o ml)',
+                        border: OutlineInputBorder(),
+                        helperText: 'Ejemplo: 100 para recibir aviso al bajar de 100g/ml.',
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -573,13 +523,13 @@ class _NotificationSettingsScreenState
                               color: const Color(0xFF0F172A),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: Colors.cyanAccent.withOpacity(0.2),
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                               ),
                             ),
                             child: ListTile(
-                              leading: const Icon(
+                              leading: Icon(
                                 Icons.alarm,
-                                color: Colors.cyanAccent,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                               title: Text(
                                 req.title ?? 'Sin Título',
@@ -635,7 +585,7 @@ class _NotificationSettingsScreenState
             // Save settings Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.cyanAccent,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -678,13 +628,13 @@ class _NotificationSettingsScreenState
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.cyanAccent),
+              Icon(icon, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 10),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 17,
-                  color: Colors.cyanAccent,
+                  color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),

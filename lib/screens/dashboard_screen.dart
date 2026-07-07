@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../state/app_state.dart';
+import '../state/theme_state.dart';
 import '../models/project.dart';
 import 'printer_list_screen.dart';
 import 'material_list_screen.dart';
 import 'new_project_screen.dart';
 import 'project_detail_screen.dart';
 import 'notification_settings_screen.dart';
+import 'profile_screen.dart';
+import '../widgets/theme_picker_button.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -16,6 +20,146 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String _selectedCollectionFilter = 'all';
+
+  // ── GlobalKeys para el tutorial ────────────────────────────────────────────
+  final GlobalKey _keyPrintersBtn = GlobalKey();
+  final GlobalKey _keyMaterialsBtn = GlobalKey();
+  final GlobalKey _keyFab = GlobalKey();
+  final GlobalKey _keyHamburger = GlobalKey();
+  final GlobalKey _keyThemePicker = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    // Lanzar tutorial automáticamente la primera vez
+    if (!appState.tutorialCompleted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 600), _launchTutorial);
+      });
+    }
+  }
+
+  // ── Motor del tutorial ─────────────────────────────────────────────────────
+
+  void _launchTutorial() {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    final targets = [
+      TargetFocus(
+        identify: 'printers',
+        keyTarget: _keyPrintersBtn,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (_, __) => _TutorialBubble(
+              step: '1 / 5',
+              icon: Icons.print_rounded,
+              title: 'Tus Impresoras',
+              body:
+                  'Registra aquí tus máquinas FDM o de resina con su potencia, costo y vida útil. La app calculará la depreciación y el consumo eléctrico exacto de cada impresión.',
+              primary: primary,
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: 'materials',
+        keyTarget: _keyMaterialsBtn,
+        shape: ShapeLightFocus.RRect,
+        radius: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (_, __) => _TutorialBubble(
+              step: '2 / 5',
+              icon: Icons.water_drop_rounded,
+              title: 'Inventario de Materiales',
+              body:
+                  'Carga tus bobinas de filamento y botellas de resina. El stock se descuenta y reembolsa automáticamente al cambiar el estado de tus proyectos.',
+              primary: primary,
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: 'fab',
+        keyTarget: _keyFab,
+        shape: ShapeLightFocus.RRect,
+        radius: 16,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (_, __) => _TutorialBubble(
+              step: '3 / 5',
+              icon: Icons.add_circle_rounded,
+              title: 'Nuevo Proyecto',
+              body:
+                  'Crea proyectos comerciales con múltiples camas de impresión. Mueve el slider de ganancia para ver el precio de venta sugerido en tiempo real.',
+              primary: primary,
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: 'theme',
+        keyTarget: _keyThemePicker,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (_, __) => _TutorialBubble(
+              step: '4 / 5',
+              icon: Icons.palette_rounded,
+              title: 'Personalizar Tema',
+              body:
+                  'Cambia la paleta de color de la app y alterna entre modo oscuro y claro. Tu elección se guarda automáticamente.',
+              primary: primary,
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: 'hamburger',
+        keyTarget: _keyHamburger,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (_, __) => _TutorialBubble(
+              step: '5 / 5',
+              icon: Icons.menu_rounded,
+              title: 'Menú de Opciones',
+              body:
+                  '¿Cambió el costo del kWh o la tarifa de impuestos? Accede a Configuración desde aquí. También puedes activar alertas y recordatorios desde Notificaciones.',
+              primary: primary,
+              isLast: true,
+            ),
+          ),
+        ],
+      ),
+    ];
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: false,
+      textSkip: 'OMITIR',
+      textStyleSkip: TextStyle(
+        color: primary,
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      ),
+      onFinish: () => appState.markTutorialCompleted(),
+      onSkip: () {
+        appState.markTutorialCompleted();
+        return true;
+      },
+    ).show(context: context);
+  }
 
   List<String> _getCollections() {
     final list = appState.projects
@@ -70,9 +214,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Text(
                       appState.translate('settings_title'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
-                        color: Colors.cyanAccent,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
@@ -82,8 +226,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Selección País
                     Text(
                       appState.translate('country'),
-                      style: const TextStyle(
-                        color: Colors.cyanAccent,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -171,8 +315,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Selección Idioma
                     Text(
                       appState.translate('language'),
-                      style: const TextStyle(
-                        color: Colors.cyanAccent,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -199,8 +343,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Selección Moneda
                     Text(
                       appState.translate('currency'),
-                      style: const TextStyle(
-                        color: Colors.cyanAccent,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -279,8 +423,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Impuesto por defecto
                     Text(
                       appState.translate('default_tax'),
-                      style: const TextStyle(
-                        color: Colors.cyanAccent,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -297,8 +441,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                     Text(
                       'Costo de Electricidad por kWh',
-                      style: const TextStyle(
-                        color: Colors.cyanAccent,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -397,34 +541,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
           listenable: appState,
           builder: (context, _) => Text(
             appState.translate('app_title'),
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.cyanAccent,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.cyanAccent),
-            tooltip: 'Notificaciones',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationSettingsScreen(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.cyanAccent),
-            tooltip: appState.translate('settings'),
-            onPressed: () => _showSettingsModal(context),
+          ThemePickerButton(key: _keyThemePicker),
+          _HamburgerMenu(
+            key: _keyHamburger,
+            onNotifications: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const NotificationSettingsScreen(),
+              ),
+            ),
+            onSettings: () => _showSettingsModal(context),
+            onTutorial: _launchTutorial,
+            onProfile: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ProfileScreen(),
+              ),
+            ),
           ),
         ],
       ),
       body: ListenableBuilder(
-        listenable: appState,
+        listenable: Listenable.merge([appState, themeState]),
         builder: (context, child) {
           final collections = _getCollections();
           if (_selectedCollectionFilter != 'all' &&
@@ -473,29 +618,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton.icon(
+                      key: _keyPrintersBtn,
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const PrinterListScreen(),
                         ),
                       ),
-                      icon: const Icon(Icons.print, size: 18),
-                      label: Text(appState.translate('printers')),
+                      icon: Icon(
+                        Icons.print,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      label: Text(
+                        appState.translate('printers'),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF334155),
+                        backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(25),
+                        foregroundColor: Theme.of(context).colorScheme.primary,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.primary.withAlpha(80),
+                            width: 1.5,
+                          ),
+                        ),
                       ),
                     ),
                     ElevatedButton.icon(
+                      key: _keyMaterialsBtn,
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const MaterialListScreen(),
                         ),
                       ),
-                      icon: const Icon(Icons.water_drop, size: 18),
-                      label: Text(appState.translate('materials')),
+                      icon: Icon(
+                        Icons.water_drop,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      label: Text(
+                        appState.translate('materials'),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF334155),
+                        backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(25),
+                        foregroundColor: Theme.of(context).colorScheme.primary,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.primary.withAlpha(80),
+                            width: 1.5,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -565,8 +752,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       ),
       floatingActionButton: ListenableBuilder(
-        listenable: appState,
+        listenable: Listenable.merge([appState, themeState]),
         builder: (context, _) => FloatingActionButton.extended(
+          key: _keyFab,
           onPressed: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const NewProjectScreen()),
@@ -579,7 +767,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          backgroundColor: Colors.cyanAccent,
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       ),
     );
@@ -617,7 +805,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         statusText = appState.translate('own_project');
         break;
       case 'independiente':
-        borderColor = Colors.cyanAccent;
+        borderColor = Theme.of(context).colorScheme.primary;
         statusText = appState.translate('independiente');
         break;
       case 'cancelado':
@@ -737,16 +925,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.folder_open,
                         size: 14,
-                        color: Colors.cyanAccent,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         project.collectionName,
-                        style: const TextStyle(
-                          color: Colors.cyanAccent,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
@@ -811,13 +999,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(
-          color: Colors.cyanAccent,
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
           width: 2.0,
         ),
       ),
       child: ExpansionTile(
-        leading: const Icon(Icons.folder_open, color: Colors.cyanAccent),
+        leading: Icon(Icons.folder_open, color: Theme.of(context).colorScheme.primary),
         title: Text(
           collectionName,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -826,8 +1014,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           'Colección | ${projects.length} proyectos | Venta Total: ${appState.format(totalPrice)}',
           style: const TextStyle(fontSize: 12, color: Colors.grey),
         ),
-        iconColor: Colors.cyanAccent,
-        collapsedIconColor: Colors.cyanAccent,
+        iconColor: Theme.of(context).colorScheme.primary,
+        collapsedIconColor: Theme.of(context).colorScheme.primary,
         children: projects.map((project) {
           final cost = project.getTotalManufacturingCost(appState.electricityPriceKwh);
           final price = project.getFinalSalePrice(appState.electricityPriceKwh);
@@ -838,7 +1026,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             case 'enProceso': statusColor = Colors.yellowAccent; break;
             case 'terminado': statusColor = Colors.redAccent; break;
             case 'propio': statusColor = Colors.grey; break;
-            case 'independiente': statusColor = Colors.cyanAccent; break;
+            case 'independiente': statusColor = Theme.of(context).colorScheme.primary; break;
             case 'cancelado': statusColor = Colors.grey.shade600; break;
           }
 
@@ -916,3 +1104,271 @@ class DashboardItem {
   bool get isProject => project != null;
   bool get isCollection => collectionName != null;
 }
+
+// ─── Menú hamburguesa del AppBar ──────────────────────────────────────────────
+
+enum _MenuOption { notifications, settings, tutorial, profile }
+
+class _HamburgerMenu extends StatelessWidget {
+  final VoidCallback onNotifications;
+  final VoidCallback onSettings;
+  final VoidCallback onTutorial;
+  final VoidCallback onProfile;
+
+  const _HamburgerMenu({
+    super.key,
+    required this.onNotifications,
+    required this.onSettings,
+    required this.onTutorial,
+    required this.onProfile,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final menuBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF1E293B);
+
+    return PopupMenuButton<_MenuOption>(
+      icon: Icon(Icons.menu_rounded, color: primary),
+      tooltip: 'Menú',
+      color: menuBg,
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: primary.withAlpha(40)),
+      ),
+      offset: const Offset(0, 48),
+      onSelected: (option) {
+        switch (option) {
+          case _MenuOption.notifications:
+            onNotifications();
+            break;
+          case _MenuOption.settings:
+            onSettings();
+            break;
+          case _MenuOption.tutorial:
+            onTutorial();
+            break;
+          case _MenuOption.profile:
+            onProfile();
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<_MenuOption>(
+          enabled: false,
+          height: 36,
+          child: Text(
+            'OPCIONES',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 2.0,
+              color: primary.withAlpha(180),
+            ),
+          ),
+        ),
+        const PopupMenuDivider(height: 1),
+        PopupMenuItem<_MenuOption>(
+          value: _MenuOption.profile,
+          child: ListenableBuilder(
+            listenable: appState,
+            builder: (context, _) {
+              final user = appState.currentUser;
+              return _MenuRow(
+                icon: Icons.account_circle_outlined,
+                label: user == null ? 'Mi Perfil' : 'Perfil: ${user.name}',
+                primary: primary,
+                textColor: textColor,
+              );
+            },
+          ),
+        ),
+        const PopupMenuDivider(height: 1),
+        PopupMenuItem<_MenuOption>(
+          value: _MenuOption.notifications,
+          child: _MenuRow(
+            icon: Icons.notifications_outlined,
+            label: 'Notificaciones',
+            primary: primary,
+            textColor: textColor,
+          ),
+        ),
+        const PopupMenuDivider(height: 1),
+        PopupMenuItem<_MenuOption>(
+          value: _MenuOption.settings,
+          child: _MenuRow(
+            icon: Icons.settings_outlined,
+            label: 'Configuración',
+            primary: primary,
+            textColor: textColor,
+          ),
+        ),
+        const PopupMenuDivider(height: 1),
+        PopupMenuItem<_MenuOption>(
+          value: _MenuOption.tutorial,
+          child: _MenuRow(
+            icon: Icons.help_outline_rounded,
+            label: 'Ver tutorial',
+            primary: primary,
+            textColor: textColor,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color primary;
+  final Color textColor;
+
+  const _MenuRow({
+    required this.icon,
+    required this.label,
+    required this.primary,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: primary.withAlpha(25),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(icon, color: primary, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          label,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Burbuja de contenido del tutorial ────────────────────────────────────────
+
+class _TutorialBubble extends StatelessWidget {
+  final String step;
+  final IconData icon;
+  final String title;
+  final String body;
+  final Color primary;
+  final bool isLast;
+
+  const _TutorialBubble({
+    required this.step,
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.primary,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: primary.withAlpha(80), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withAlpha(40),
+              blurRadius: 20,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Encabezado con paso y ícono
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: primary.withAlpha(30),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: primary, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        step,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                          color: primary.withAlpha(180),
+                        ),
+                      ),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              body,
+              style: const TextStyle(
+                fontSize: 13.5,
+                color: Colors.white70,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Indicador de acción
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  isLast ? 'Toca para finalizar ✓' : 'Toca para continuar →',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

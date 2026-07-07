@@ -25,6 +25,9 @@ class NotificationService {
   String recurringBody = 'Recuerda revisar el nivel de filamento/resina y el estado de tus impresoras.';
   TimeOfDay recurringTime = const TimeOfDay(hour: 9, minute: 0);
 
+  bool isLowMaterialActive = false;
+  double lowMaterialThreshold = 100.0;
+
   // Notification IDs
   static const int testNotificationId = 999;
   static const int testScheduledNotificationId = 998;
@@ -128,6 +131,9 @@ class NotificationService {
     final recHour = prefs.getInt('notif_recurring_hour') ?? 9;
     final recMin = prefs.getInt('notif_recurring_minute') ?? 0;
     recurringTime = TimeOfDay(hour: recHour, minute: recMin);
+
+    isLowMaterialActive = prefs.getBool('notif_low_material_active') ?? false;
+    lowMaterialThreshold = prefs.getDouble('notif_low_material_threshold') ?? 100.0;
   }
 
   // Save configuration to SharedPreferences
@@ -147,6 +153,9 @@ class NotificationService {
     await prefs.setString('notif_recurring_body', recurringBody);
     await prefs.setInt('notif_recurring_hour', recurringTime.hour);
     await prefs.setInt('notif_recurring_minute', recurringTime.minute);
+
+    await prefs.setBool('notif_low_material_active', isLowMaterialActive);
+    await prefs.setDouble('notif_low_material_threshold', lowMaterialThreshold);
   }
 
   // 1. Immediate Test Notification

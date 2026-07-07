@@ -118,7 +118,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             appState.translate('project_updated'),
             style: const TextStyle(color: Colors.black),
           ),
-          backgroundColor: Colors.cyanAccent,
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
       setState(() {
@@ -235,7 +235,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       appBar: AppBar(
         title: Text(
           appState.translate('edit_project'),
-          style: const TextStyle(color: Colors.cyanAccent),
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
         ),
         actions: [
           IconButton(
@@ -259,7 +259,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     appState.translate('undo') + ' (resumen copiado)',
                     style: const TextStyle(color: Colors.black),
                   ),
-                  backgroundColor: Colors.cyanAccent,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                 ),
               );
             },
@@ -390,7 +390,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 contentPadding: EdgeInsets.zero,
                 title: Text(
                   appState.translate('delivery_date'),
-                  style: const TextStyle(color: Colors.cyanAccent),
+                  style: TextStyle(color: Theme.of(context).colorScheme.primary),
                 ),
                 subtitle: Text("$dateStr $timeStr"),
                 trailing: IconButton(
@@ -438,17 +438,17 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             // SECCIÓN MENÚS ABATIBLES (EXPANSION TILES)
             Text(
               appState.translate('financial_summary') + ':',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.cyanAccent,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: 10),
 
             // 1. Camas de Impresión
             ExpansionTile(
-              leading: const Icon(Icons.extension, color: Colors.cyanAccent),
+              leading: Icon(Icons.extension, color: Theme.of(context).colorScheme.primary),
               title: Text('Camas de Impresión (${_localBeds.length})'),
               subtitle: Text(
                 'Costo Materiales: ${appState.format(materialsCost)}',
@@ -465,7 +465,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     label: const Text('Agregar Cama de Impresión'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(40),
-                      side: const BorderSide(color: Colors.cyanAccent),
+                      side: BorderSide(color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
                 ),
@@ -510,10 +510,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                   ),
                                   const SizedBox(width: 4),
                                   IconButton(
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.edit,
                                       size: 18,
-                                      color: Colors.cyanAccent,
+                                      color: Theme.of(context).colorScheme.primary,
                                     ),
                                     onPressed: () =>
                                         _showAddOrEditPrintBedModal(
@@ -584,12 +584,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                             'Tiempo de impresión: ${bed.printHours}h ${bed.printMinutes}m',
                           ),
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'Piezas en la Cama:',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: Colors.cyanAccent,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           ...bed.pieces.map((p) {
@@ -880,15 +880,15 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                 ivaCost,
                               ),
                             ],
-                            const Divider(color: Colors.cyanAccent),
+                            Divider(color: Theme.of(context).colorScheme.primary),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   appState.translate('final_price'),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.cyanAccent,
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                                 Text(
@@ -918,7 +918,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               },
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
-                backgroundColor: Colors.cyanAccent,
+                backgroundColor: Theme.of(context).colorScheme.primary,
               ),
               child: Text(
                 appState.translate('save_changes'),

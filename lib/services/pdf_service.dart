@@ -204,7 +204,7 @@ class PdfService {
                     ),
                     pw.SizedBox(height: 10),
                   ];
-                }).toList(),
+                }),
                 pw.SizedBox(height: 20),
 
                 // Mano de Obra y Post-procesado
